@@ -1,0 +1,25 @@
+{
+  // Enable formatting every time you save the file
+  "editor.formatOnSave": true,
+
+  // Set Prettier as the default for TypeScript
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  
+  // Set Prettier as the default for TypeScript React (if you use TSX)
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Set Prettier as the default for YAML
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Set Black as the default for Python
+  "[python]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+}

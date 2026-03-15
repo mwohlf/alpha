@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useGetApiHello } from "./api/generated/default/default";
+import React, { useState, useEffect } from "react";
+import logo from "./logo.svg";
+import "./App.css";
 
 function App() {
-  const [message, setMessage] = useState('');
+  const { data, isLoading, error } = useGetApiHello();
 
-  useEffect(() => {
-    fetch('/api/hello')
-      .then(response => response.json())
-      .then(data => setMessage(data.message));
-  }, []);
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error loading users!</p>;
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>{message}</p>
+        <p>{data?.data?.message}</p>
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>

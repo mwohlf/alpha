@@ -16,7 +16,8 @@ The backend server will be running on `http://127.0.0.1:8000`.
 
 1. Navigate to the `frontend` directory.
 2. Install the dependencies: `npm install`
-3. Start the frontend development server: `npm start`
+3. Install the dependencies: `npm run build`
+4. Start the frontend development server: `npm start`
 
 The frontend will be running on `http://localhost:3000`. The frontend will automatically proxy requests to the backend.
 

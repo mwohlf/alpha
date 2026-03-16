@@ -1,45 +1,69 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "installation": {
-    "version": "22.5.4" 
+    "version": "22.5.4"
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(target)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/pytest.ini"
+    ],
+    "sharedGlobals": []
   },
   "targetDefaults": {
-    "dev": {
-      "dependsOn": [
-        "^dev"
-      ]
-    },
     "build": {
       "dependsOn": [
         "^build"
       ],
-      "outputs": [
-        "{projectRoot}/dist"
+      "inputs": [
+        "production"
       ],
       "cache": true
-    },
-    "preview": {
-      "dependsOn": [
-        "^preview"
-      ]
     },
     "test": {
-      "dependsOn": [
-        "^test"
-      ],
-      "outputs": [
-        "{projectRoot}/coverage"
+      "inputs": [
+        "default",
+        "^production"
       ],
       "cache": true
     },
-    "generate-api": {
-      "dependsOn": [
-        "^generate-api"
-      ],
-      "outputs": [
-        "{projectRoot}/generated"
+    "lint": {
+      "inputs": [
+        "default"
       ],
       "cache": true
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/vite",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ],
+  "generators": {
+    "@nx/react": {
+      "application": {
+        "style": "css",
+        "linter": "eslint",
+        "bundler": "vite"
+      }
     }
   }
 }

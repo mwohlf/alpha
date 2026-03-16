@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 
 // defineConfig provides fantastic TypeScript autocompletion for your Vite config
 export default defineConfig({
+  root: __dirname, // This tells Vite the project starts inside the 'frontend' folder
+  cacheDir: "../node_modules/.vite/frontend",
   plugins: [react()],
   build: {
     outDir: "build",

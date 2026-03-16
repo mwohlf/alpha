@@ -1,0 +1,46 @@
+{
+  "name": "backend",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "backend",
+  "targets": {
+    "lock": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pip freeze > requirements.txt",
+        "cwd": "backend"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/backend"],
+      "options": {
+        "command": "python -m compileall .",
+        "cwd": "backend"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "python -m uvicorn main:app --reload",
+        "cwd": "backend"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/backend"],
+      "options": {
+        "command": "pytest",
+        "cwd": "backend"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "flake8 .",
+        "cwd": "backend"
+      }
+    }
+  },
+  "tags": ["scope:backend", "type:app"]
+}

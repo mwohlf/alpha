@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "installation": {
+    "version": "22.5.4" 
+  },
+  "targetDefaults": {
+    "dev": {
+      "dependsOn": [
+        "^dev"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "cache": true
+    },
+    "preview": {
+      "dependsOn": [
+        "^preview"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "^test"
+      ],
+      "outputs": [
+        "{projectRoot}/coverage"
+      ],
+      "cache": true
+    },
+    "generate-api": {
+      "dependsOn": [
+        "^generate-api"
+      ],
+      "outputs": [
+        "{projectRoot}/generated"
+      ],
+      "cache": true
+    }
+  }
+}

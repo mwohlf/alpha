@@ -27,3 +27,11 @@ The frontend will be running on `http://localhost:3000`. The frontend will autom
 
 (ollama openAPI definition)[https://github.com/ollama/ollama/tree/main/docs]
 
+
+
+
+### setup
+
+npx nx init 
+npx nx report
+

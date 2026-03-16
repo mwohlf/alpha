@@ -7,8 +7,11 @@ This project is a simple React frontend and FastAPI backend application.
 ### Backend
 
 1. Navigate to the `backend` directory.
-2. Activate the virtual environment: `source venv/bin/activate`
+2. Activate the virtual environment: `source .venv/bin/activate`
 3. Start the backend server: `uvicorn main:app --reload`
+
+or just:  `npx nx serve backend` in root
+
 
 The backend server will be running on `http://127.0.0.1:8000`.
 

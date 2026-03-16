@@ -2,7 +2,7 @@
 /frontend/dist
 /frontend/src/api/generated
 /backend/__pycache__
-/backend/venv
+/backend/.venv
 /backend/ollama_client
 .nx/installation
 .nx/cache

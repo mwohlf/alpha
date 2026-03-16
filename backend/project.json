@@ -22,7 +22,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "python -m uvicorn main:app --reload",
+        "command": "./.venv/bin/python -m uvicorn main:app --reload",
         "cwd": "backend"
       }
     },

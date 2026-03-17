@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/mwohlf/alpha#readme",
   "devDependencies": {
-    "@nx/vite": "^22.5.4",
-    "nx": "22.5.4"
+    "@nx/vite": "^21.6.0",
+    "nx": "21.6.0"
   }
 }

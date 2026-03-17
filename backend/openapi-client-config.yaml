@@ -1,0 +1,4 @@
+project_name_override: ollama_client
+package_name_override: ollama_client
+output_directory_override: .
+class_name: OllamaClient

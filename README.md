@@ -35,6 +35,7 @@ The frontend will be running on `http://localhost:3000`. The frontend will autom
 
 ### setup
 
+cd alpha
 rm -rf node_modules package-lock.json
 npm install
 

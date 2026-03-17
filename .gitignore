@@ -9,3 +9,8 @@
 .nx/workspace-data
 node_modules
 dist
+
+
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

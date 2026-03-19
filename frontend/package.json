@@ -18,10 +18,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest",
+    "dev": "nx vite:serve",
+    "build": "tsc && nx vite:build",
+    "preview": "nx vite:preview",
+    "test": "nx vite:test",
     "generate-api": "orval"
   },
   "browserslist": {

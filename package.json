@@ -21,8 +21,32 @@
     "url": "https://github.com/mwohlf/alpha/issues"
   },
   "homepage": "https://github.com/mwohlf/alpha#readme",
+  "nx": {
+    "targets": {
+      "setup": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node -e \"console.log('\\x1b[32m%s\\x1b[0m', '✔ Setup Start')\""        
+        }
+      },
+      "clean": {
+        "executor": "nx:run-commands",
+        "options": {
+          "commands": [
+            "node -e \"console.log('\\x1b[32m%s\\x1b[0m', '✔ starting cleanup...')\"",    
+            "rimraf ./frontend/node_modules",
+            "rimraf ./backend/__pycache__",
+            "rimraf ./backend/.venv",
+            "rimraf ./backend/ollama_client",
+            "rimraf ./.nx/cache",
+            "rimraf ./.nx/installation"
+          ]
+        }      
+      }
+    }  
+  },
   "devDependencies": {
-    "@nx/vite": "^21.6.1",
-    "nx": "21.6.1"
-  }
+    "rimraf": "^6.1.3"
+  },
+  "dependencies": {}
 }

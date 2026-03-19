@@ -40,6 +40,16 @@ rm -rf node_modules package-lock.json
 npm install
 
 
-npx nx init 
-npx nx report
+./nx init 
+./nx report
+./nx setup alpha
+./nx clean alpha
 
+
+
+## nx usage
+
+
+./nx reset
+npm install
+./nx 

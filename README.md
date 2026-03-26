@@ -51,16 +51,18 @@ npm install
 ```
 
 #### fire up the project setup with nx
+./nx reset
 ./nx init --no-interactive --nxCloud=false
 ./nx report
+
+./nx orval frontend
+./nx serve frontend
+
+
+
+
 ./nx clean alpha
 ./nx setup alpha
 ./nx run alpha
 
 
-## nx usage
-
-
-./nx reset
-npm install
-./nx 

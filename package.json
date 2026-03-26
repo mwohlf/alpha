@@ -22,8 +22,7 @@
           "commands": [
             "rimraf frontend/node_modules",
             "rimraf backend/__pycache__",
-            "rimraf frontend/.venv",
-            "./nx reset"
+            "rimraf frontend/.venv"
           ]
         }
       }

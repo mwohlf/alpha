@@ -7,34 +7,23 @@
     "build": {
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/frontend"
-      },
-      "configurations": {
-        "production": {
-          "fileReplacements": [
-            {
-              "replace": "frontend/src/environments/environment.ts",
-              "with": "frontend/src/environments/environment.prod.ts"
-            }
-          ]
-        }
+        "outputPath": "dist/frontend",
+        "configFile": "frontend/vite.config.ts"
       }
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {
-        "proxyConfig": "frontend/proxy.conf.json"
+        "buildTarget": "frontend:build"
       }
     },
-    "test": {
-      "executor": "@nx/vite:test",
-      "outputs": ["{workspaceRoot}/coverage/frontend"],
+    "orval": {
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "../coverage/frontend"
+        "command": "npx orval",
+        "cwd": "frontend"
       }
     }
-  },
-  "tags": ["scope:frontend", "type:app"]
+  }
 }

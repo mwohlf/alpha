@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "installation": {
-    "version": "22.6.0"
+    "version": "22.6.1"
   },
   "namedInputs": {
     "default": [
@@ -41,6 +41,13 @@
         "default"
       ],
       "cache": true
+    },
+    "@nx/vitest:test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production"
+      ]
     }
   },
   "plugins": [

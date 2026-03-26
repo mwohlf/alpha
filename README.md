@@ -35,16 +35,27 @@ The frontend will be running on `http://localhost:3000`. The frontend will autom
 
 ### setup
 
+requirements for local host:
+- node
+- npm
+
+
+#### bootstrap with local npm
+
+this uses the config in package.json to install `nx` and `rimraf` from the top level `package.json`
+plus anything configured in the workspaces `frontend` and `backend`
+```bash
 cd alpha
 rm -rf node_modules package-lock.json
 npm install
+```
 
-
-./nx init 
+#### fire up the project setup with nx
+./nx init --no-interactive --nxCloud=false
 ./nx report
-./nx setup alpha
 ./nx clean alpha
-
+./nx setup alpha
+./nx run alpha
 
 
 ## nx usage

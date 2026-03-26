@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
+      "dependsOn": ["orval"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/frontend",
@@ -14,12 +15,18 @@
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "frontend:build"
       }
     },
     "orval": {
       "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/frontend/src/api/generated"],
+      "inputs": [
+        "{workspaceRoot}/etc/alpha-service.yaml", 
+        "{workspaceRoot}/frontend/orval.config.ts"
+      ],
       "options": {
         "command": "npx orval",
         "cwd": "frontend"

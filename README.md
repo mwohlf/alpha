@@ -46,7 +46,12 @@ this uses the config in package.json to install `nx` and `rimraf` from the top l
 plus anything configured in the workspaces `frontend` and `backend`
 ```bash
 cd alpha
-rm -rf node_modules package-lock.json
+rm -rf node_modules \ 
+  package-lock.json \
+  dist \
+  frontend/node_modules \
+  frontend/src/api/generated
+
 npm install
 ```
 
@@ -55,7 +60,7 @@ npm install
 ./nx init --no-interactive --nxCloud=false
 ./nx report
 
-./nx orval frontend
+# ./nx orval frontend
 ./nx serve frontend
 
 

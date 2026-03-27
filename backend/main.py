@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
 import jwt
 from datetime import datetime, timedelta
@@ -37,7 +37,7 @@ app.add_middleware(
 # Security
 security = HTTPBearer()
 
-def verify_token(credentials: HTTPAuthCredentials = Depends(security)):
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify JWT token from Authorization header"""
     try:
         payload = jwt.decode(

@@ -60,10 +60,12 @@ npm install
 ./nx init --no-interactive --nxCloud=false
 ./nx report
 
-# ./nx orval frontend
+
+./nx build frontend
+./nx build backend
+
 ./nx serve frontend
-
-
+./nx serve backend
 
 
 ./nx clean alpha

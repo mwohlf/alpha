@@ -25,6 +25,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "dependsOn": ["orval"],
       "outputs": ["{workspaceRoot}/dist/backend"],
       "options": {
         "command": "python -m compileall .",

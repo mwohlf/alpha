@@ -4,6 +4,18 @@
   "projectType": "application",
   "sourceRoot": "frontend/src",
   "targets": {
+    "orval": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/frontend/src/api/generated"],
+      "inputs": [
+        "{workspaceRoot}/etc/alpha-service.yaml", 
+        "{workspaceRoot}/frontend/orval.config.ts"
+      ],
+      "options": {
+        "command": "npx orval",
+        "cwd": "frontend"
+      }
+    },
     "build": {
       "executor": "@nx/vite:build",
       "dependsOn": ["orval"],
@@ -18,18 +30,6 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "frontend:build"
-      }
-    },
-    "orval": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/frontend/src/api/generated"],
-      "inputs": [
-        "{workspaceRoot}/etc/alpha-service.yaml", 
-        "{workspaceRoot}/frontend/orval.config.ts"
-      ],
-      "options": {
-        "command": "npx orval",
-        "cwd": "frontend"
       }
     }
   }

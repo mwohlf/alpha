@@ -40,9 +40,9 @@ requirements for local host:
 - npm
 
 
-#### bootstrap with local npm
+#### bootstrap with local npm and python
 
-this uses the config in package.json to install `nx` and `rimraf` from the top level `package.json`
+this uses the config in alpha/package.json to install `nx` and `rimraf` from the top level `package.json`
 plus anything configured in the workspaces `frontend` and `backend`
 ```bash
 cd alpha

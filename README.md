@@ -6,6 +6,7 @@ requirements for local host:
 - node
 - npm
 - python3
+- docker
 
 ## setup
 

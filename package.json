@@ -29,6 +29,7 @@
     }
   },
   "devDependencies": {
+    "@nx/docker": "^22.6.2",
     "@nx/vite": "22.6.1",
     "@nx/vitest": "22.6.1",
     "@nxlv/python": "^22.1.1",

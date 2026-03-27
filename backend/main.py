@@ -1,13 +1,18 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
-import jwt
 from datetime import datetime, timedelta
 from config import settings
 from ollama_service import get_ollama_client
 from pydantic import BaseModel
 from typing import Optional
+
+import os
+import jwt
+
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
@@ -33,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+frontend_dist = "../dist/frontend"
 
 # Security
 security = HTTPBearer()
@@ -67,6 +75,18 @@ def protected_endpoint():
     """Protected endpoint requiring JWT token"""
     return {"message": "This is a protected endpoint"}
 
+
+# a catch-all route for the SPA (Single Page Application)
+# This MUST come after your API routes so it doesn't intercept them
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    # If the requested file exists (like favicon.ico), serve it
+    file_path = os.path.join(frontend_dist, full_path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    
+    # Otherwise, always serve index.html (the entry point for React Router)
+    return FileResponse(f"{frontend_dist}/index.html")
 
 # ============== Ollama Integration ==============
 

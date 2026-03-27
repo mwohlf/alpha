@@ -43,6 +43,11 @@ The frontend will be running on `http://localhost:3000`. The frontend will autom
 The backend will be running on `http://127.0.0.1:8000`.
 
 
+##
+
+http://127.0.0.1:3000/index.html   - serving with backend by proxy
+
+http://127.0.0.1:8000/index.html   - serving frontend by the backend
 
 
 ## Links

@@ -7,12 +7,13 @@
     "lock": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pip freeze > requirements.txt",
+        "command": "./.venv/bin/python -m pip freeze > requirements.txt",
         "cwd": "backend"
       }
     },
     "prepare": {
       "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.venv"],
       "options": {
         "commands": [
           "python3 -m venv .venv",
@@ -26,14 +27,15 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": ["orval"],
-      "outputs": ["{workspaceRoot}/dist/backend"],
+      "outputs": ["{projectRoot}/__pycache__"],
       "options": {
-        "command": "python -m compileall .",
+        "command": "./.venv/bin/python -m compileall .",
         "cwd": "backend"
       }
     },
     "serve": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "command": "./.venv/bin/python -m uvicorn main:app --reload",
         "cwd": "backend"

@@ -19,7 +19,7 @@
           "python3 -m venv .venv",
           ".venv/bin/pip install --upgrade pip",
           ".venv/bin/pip install -r requirements-dev.txt",
-          ".venv/bin/python extract_openapi.py > openapi.json"
+          ".venv/bin/python _extract_openapi.py"
         ],
         "parallel": false,
         "cwd": "backend"

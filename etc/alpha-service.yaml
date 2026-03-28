@@ -1,80 +1,142 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
-  title: Alpha Project API
-  description: FastAPI backend for Alpha Project
+  title: Alpha API
+  description: Alpha Project API
   version: 1.0.0
-
-servers:
-  - url: http://127.0.0.1:8000
-    description: Local development server
-
 paths:
   /api/health:
     get:
-      summary: Health check endpoint
       tags:
-        - api
+      - api
+      summary: Health check endpoint
+      description: Health check endpoint
+      operationId: get_health_api_health_get
       responses:
         '200':
-          description: Service is healthy
+          description: Successful Response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: healthy
-
+                $ref: '#/components/schemas/HealthGetResponse'
   /api/hello:
     get:
-      summary: Returns a hello message
       tags:
-        - api
+      - api
+      summary: Returns a hello message
+      description: Returns a hello message
+      operationId: get_hello_api_hello_get
       responses:
         '200':
-          description: A JSON object containing a hello message
+          description: Successful Response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Hello from FastAPI
-
+                $ref: '#/components/schemas/HelloGetResponse'
   /api/protected:
     get:
-      summary: Protected endpoint requiring JWT token
       tags:
-        - api
-      security:
-        - bearerAuth: []
+      - api
+      summary: Protected endpoint requiring JWT token
+      description: Protected endpoint requiring JWT token
+      operationId: get_protected_api_protected_get
       responses:
         '200':
-          description: Successfully authenticated
+          description: Successful Response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: This is a protected endpoint
-        '401':
-          description: Unauthorized - Invalid or missing token
+                $ref: '#/components/schemas/ProtectedGetResponse'
+      security:
+      - HTTPBearer: []
+  /{full_path}:
+    get:
+      summary: Serve React App
+      operationId: serve_react_app__full_path__get
+      parameters:
+      - name: full_path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Full Path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: Invalid authentication credentials
-
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthGetResponse:
+      properties:
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+          examples:
+          - healthy
+      type: object
+      title: HealthGetResponse
+    HelloGetResponse:
+      properties:
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          examples:
+          - Hello from FastAPI
+      type: object
+      title: HelloGetResponse
+    ProtectedGetResponse:
+      properties:
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          examples:
+          - This is a protected endpoint
+      type: object
+      title: ProtectedGetResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
   securitySchemes:
-    bearerAuth:
+    HTTPBearer:
       type: http
       scheme: bearer
-      bearerFormat: JWT

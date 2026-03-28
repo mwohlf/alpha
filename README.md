@@ -57,3 +57,9 @@ http://127.0.0.1:8000/index.html   - serving frontend by the backend
 (ollama openAPI definition)[https://github.com/ollama/ollama/tree/main/docs]
 
 
+todo:
+
+pipx run openapi-python-client generate --path openapi.yaml
+
+# This extracts the schema to a file named openapi.json
+fastapi openapi main.py --output openapi.json

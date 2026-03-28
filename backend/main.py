@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from config import settings
-from generated import router
+
+from router import router  # Get the object FROM the file
 
 import os
 

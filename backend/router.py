@@ -10,7 +10,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 
 from config import settings
-from .models import *
+from models import *
 
 # Security
 security = HTTPBearer()

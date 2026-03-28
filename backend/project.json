@@ -18,7 +18,8 @@
         "commands": [
           "python3 -m venv .venv",
           ".venv/bin/pip install --upgrade pip",
-          ".venv/bin/pip install -r requirements-dev.txt"
+          ".venv/bin/pip install -r requirements-dev.txt",
+          ".venv/bin/python extract_openapi.py > openapi.json"
         ],
         "parallel": false,
         "cwd": "backend"
@@ -26,7 +27,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["orval"],
+      "dependsOn": ["prepare"],
       "outputs": ["{projectRoot}/__pycache__"],
       "options": {
         "command": "./.venv/bin/python -m compileall .",

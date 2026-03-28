@@ -3,3 +3,4 @@
 openapi-python-client==0.28.3
 wheel==0.46.3
 virtualenv==21.2.0
+fastapi-code-generator==0.4.3

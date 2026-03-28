@@ -1,4 +1,4 @@
-import { useGetApiHello } from "./api/generated/default/default";
+import { useGetApiHello } from "./generated/api/api";
 import React, { useState, useEffect } from "react";
 import "./App.css";
 

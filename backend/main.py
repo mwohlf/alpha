@@ -1,17 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from config import settings
-from ollama_service import get_ollama_client
-from pydantic import BaseModel
-from typing import Optional
+from generated import router
 
 import os
-import jwt
 
 
 # Lifespan context manager for startup/shutdown events
@@ -39,42 +33,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API router
+app.include_router(router)
 
 frontend_dist = "../dist/frontend"
-
-# Security
-security = HTTPBearer()
-
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token from Authorization header"""
-    try:
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-        return payload
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-@app.get("/api/health")
-def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
-
-@app.get("/api/hello")
-def read_root():
-    return {"message": "Hello from FastAPI"}
-
-@app.get("/api/protected", dependencies=[Depends(verify_token)])
-def protected_endpoint():
-    """Protected endpoint requiring JWT token"""
-    return {"message": "This is a protected endpoint"}
-
 
 # a catch-all route for the SPA (Single Page Application)
 # This MUST come after your API routes so it doesn't intercept them
@@ -84,79 +46,6 @@ async def serve_react_app(full_path: str):
     file_path = os.path.join(frontend_dist, full_path)
     if os.path.isfile(file_path):
         return FileResponse(file_path)
-    
+
     # Otherwise, always serve index.html (the entry point for React Router)
     return FileResponse(f"{frontend_dist}/index.html")
-
-# ============== Ollama Integration ==============
-
-class GenerateRequest(BaseModel):
-    """Request model for text generation"""
-    model: str
-    prompt: str
-    temperature: Optional[float] = None
-    top_k: Optional[int] = None
-    top_p: Optional[float] = None
-
-
-class EmbedRequest(BaseModel):
-    """Request model for embeddings"""
-    model: str
-    text: str
-
-
-@app.get("/api/ollama/models")
-def list_ollama_models():
-    """List all available Ollama models"""
-    try:
-        client = get_ollama_client()
-        models = client.list_models()
-        return models
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/ollama/generate")
-def generate_text(request: GenerateRequest):
-    """Generate text using Ollama"""
-    try:
-        client = get_ollama_client()
-        
-        kwargs = {}
-        if request.temperature is not None:
-            kwargs["temperature"] = request.temperature
-        if request.top_k is not None:
-            kwargs["top_k"] = request.top_k
-        if request.top_p is not None:
-            kwargs["top_p"] = request.top_p
-        
-        result = client.generate(
-            model=request.model,
-            prompt=request.prompt,
-            **kwargs
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/ollama/embed")
-def generate_embeddings(request: EmbedRequest):
-    """Generate embeddings using Ollama"""
-    try:
-        client = get_ollama_client()
-        result = client.embed(model=request.model, prompt=request.text)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/ollama/pull")
-def pull_model(model_name: str):
-    """Pull/download a model from Ollama library"""
-    try:
-        client = get_ollama_client()
-        result = client.pull_model(model_name)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

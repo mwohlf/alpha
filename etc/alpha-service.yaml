@@ -1,16 +1,39 @@
 openapi: 3.0.0
 info:
-  title: Simple API
-  description: A simple API to demonstrate frontend-backend communication.
+  title: Alpha Project API
+  description: FastAPI backend for Alpha Project
   version: 1.0.0
 
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development server
+
 paths:
-  /api/hello:
+  /api/health:
     get:
-      summary: Returns a hello message.
+      summary: Health check endpoint
+      tags:
+        - api
       responses:
         '200':
-          description: A JSON object containing a hello message.
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+
+  /api/hello:
+    get:
+      summary: Returns a hello message
+      tags:
+        - api
+      responses:
+        '200':
+          description: A JSON object containing a hello message
           content:
             application/json:
               schema:
@@ -19,3 +42,39 @@ paths:
                   message:
                     type: string
                     example: Hello from FastAPI
+
+  /api/protected:
+    get:
+      summary: Protected endpoint requiring JWT token
+      tags:
+        - api
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This is a protected endpoint
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Invalid authentication credentials
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

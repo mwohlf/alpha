@@ -12,15 +12,16 @@ requirements for local host:
 
 this uses the config in alpha/package.json to install dependencies from the top level `package.json`
 plus anything configured in the workspaces `frontend` and `backend`
+
 ```bash
 
 # clean
 cd alpha
-rm -rf node_modules \ 
+rm -rf node_modules \
   package-lock.json \
   dist \
   frontend/node_modules \
-  frontend/src/api/generated
+  frontend/src/generated
 
 # prepare
 npm install

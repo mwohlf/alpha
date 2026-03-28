@@ -7,8 +7,8 @@ export default defineConfig({
 
     output: {
       // 2. Where should Orval put the generated code?
-      target: "./src/api/generated/endpoints.ts",
-      schemas: "./src/api/generated/models",
+      target: "./src/generated/endpoints.ts",
+      schemas: "./src/generated/models",
 
       // 3. Generate TanStack Query hooks instead of plain fetch calls
       client: "react-query",

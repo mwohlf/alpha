@@ -2,7 +2,6 @@ import { defineConfig } from "orval";
 
 export default defineConfig({
   myApi: {
-    // 1. Where is your Swagger/OpenAPI file? (Can be a local path or a live URL)
     input: "../etc/alpha-service.yaml",
 
     output: {
@@ -14,7 +13,9 @@ export default defineConfig({
       client: "react-query",
 
       // 4. (Optional) Splits files cleanly based on your API tags
-      mode: "tags-split",
+      mode: "split",
+
+      clean: true,
     },
   },
 });

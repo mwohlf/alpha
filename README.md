@@ -31,12 +31,12 @@ npm install
 ./nx report
 
 
-./nx build frontend
 ./nx build backend
+./nx build frontend
 
 # run
-./nx serve frontend
 ./nx serve backend
+./nx serve frontend
 
 ```
 

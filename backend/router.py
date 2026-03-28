@@ -38,21 +38,21 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 # ============== Generated Endpoints ==============
 
-@router.get("/health", summary="Health check endpoint", tags=[], response_model=HealthGetResponse)
+@router.get("/health", summary="Health check endpoint", tags=[], response_model=HealthGetResponse, operation_id="get_health")
 def get_health() -> HealthGetResponse:
     """
     Health check endpoint
     """
     return HealthGetResponse(status='healthy')
 
-@router.get("/hello", summary="Returns a hello message", tags=[], response_model=HelloGetResponse)
+@router.get("/hello", summary="Returns a hello message", tags=[], response_model=HelloGetResponse, operation_id="get_hello")
 def get_hello() -> HelloGetResponse:
     """
     Returns a hello message
     """
     return HelloGetResponse(message='Hello from FastAPI')
 
-@router.get("/protected", summary="Protected endpoint requiring JWT token", tags=[], response_model=ProtectedGetResponse, dependencies=[Depends(verify_token)])
+@router.get("/protected", summary="Protected endpoint requiring JWT token", tags=[], response_model=ProtectedGetResponse, operation_id="get_protected", dependencies=[Depends(verify_token)])
 def get_protected() -> ProtectedGetResponse:
     """
     Protected endpoint requiring JWT token

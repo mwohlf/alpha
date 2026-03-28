@@ -1,9 +1,9 @@
-import { useGetApiHello } from "./generated/api/api";
+import { useGetHello } from "./generated/endpoints";
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const { data, isLoading, error } = useGetApiHello();
+  const { data, isLoading, error } = useGetHello();
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error loading users!</p>;

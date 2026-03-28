@@ -10,7 +10,7 @@ paths:
       - api
       summary: Health check endpoint
       description: Health check endpoint
-      operationId: get_health_api_health_get
+      operationId: get_health
       responses:
         '200':
           description: Successful Response
@@ -24,7 +24,7 @@ paths:
       - api
       summary: Returns a hello message
       description: Returns a hello message
-      operationId: get_hello_api_hello_get
+      operationId: get_hello
       responses:
         '200':
           description: Successful Response
@@ -38,7 +38,7 @@ paths:
       - api
       summary: Protected endpoint requiring JWT token
       description: Protected endpoint requiring JWT token
-      operationId: get_protected_api_protected_get
+      operationId: get_protected
       responses:
         '200':
           description: Successful Response

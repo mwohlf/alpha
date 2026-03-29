@@ -11,7 +11,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src="./logo.svg" className="App-logo" alt="logo" />
+        <img src="/app/logo.svg" className="App-logo" alt="logo" />
         <p>{data?.data?.message}</p>
         <p>
           Edit <code>src/App.tsx</code> and save to reload.

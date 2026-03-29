@@ -11,7 +11,18 @@
         "cwd": "backend"
       }
     },
-    "prepare": {
+    "extract_openapi": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.venv"],
+      "options": {
+        "commands": [
+          ".venv/bin/python _extract_openapi.py"
+        ],
+        "parallel": false,
+        "cwd": "backend"
+      }
+    },
+    "create_venv": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/.venv"],
       "options": {
@@ -19,7 +30,6 @@
           "python3 -m venv .venv",
           ".venv/bin/pip install --upgrade pip",
           ".venv/bin/pip install -r requirements-dev.txt",
-          ".venv/bin/python _extract_openapi.py"
         ],
         "parallel": false,
         "cwd": "backend"
@@ -27,7 +37,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["prepare"],
+      "dependsOn": ["create_venv","extract_openapi"],
       "outputs": ["{projectRoot}/__pycache__"],
       "options": {
         "command": "./.venv/bin/python -m compileall .",

@@ -20,6 +20,8 @@ cd alpha
 rm -rf node_modules \
   package-lock.json \
   dist \
+  backend/.venv \
+  backend/__pycache__ \
   frontend/node_modules \
   frontend/src/generated
 

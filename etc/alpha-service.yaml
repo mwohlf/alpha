@@ -48,40 +48,8 @@ paths:
                 $ref: '#/components/schemas/ProtectedGetResponse'
       security:
       - HTTPBearer: []
-  /{full_path}:
-    get:
-      summary: Serve React App
-      operationId: serve_react_app__full_path__get
-      parameters:
-      - name: full_path
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Full Path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
     HealthGetResponse:
       properties:
         status:
@@ -115,27 +83,6 @@ components:
           - This is a protected endpoint
       type: object
       title: ProtectedGetResponse
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
   securitySchemes:
     HTTPBearer:
       type: http

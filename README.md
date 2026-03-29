@@ -23,7 +23,8 @@ rm -rf node_modules \
   backend/.venv \
   backend/__pycache__ \
   frontend/node_modules \
-  frontend/src/generated
+  frontend/src/generated \
+  etc/alpha-service.yaml
 
 # prepare
 npm install

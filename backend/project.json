@@ -2,37 +2,44 @@
   "name": "backend",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "backend",
+  "root": "backend",
+  "sourceRoot": "{projectRoot}",
   "targets": {
     "lock": {
       "executor": "nx:run-commands",
       "options": {
         "command": "./.venv/bin/python -m pip freeze > requirements.txt",
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "extract_openapi": {
       "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/.venv"],
+      "dependsOn": ["create_venv"],
+      "outputs": ["{workspaceRoot}/etc/alpha-service.yaml"],
       "options": {
         "commands": [
-          ".venv/bin/python _extract_openapi.py"
+          "./.venv/bin/python _extract_openapi.py > ../etc/alpha-service.yaml"
         ],
         "parallel": false,
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "create_venv": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/requirements-dev.txt",
+        "{projectRoot}/requirements.txt",
+        { "env": "PYTHON_VERSION" } 
+      ],
       "outputs": ["{projectRoot}/.venv"],
       "options": {
         "commands": [
           "python3 -m venv .venv",
-          ".venv/bin/pip install --upgrade pip",
-          ".venv/bin/pip install -r requirements-dev.txt",
+          "./.venv/bin/pip install --upgrade pip",
+          "./.venv/bin/pip install -r requirements-dev.txt"
         ],
         "parallel": false,
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "build": {
@@ -41,7 +48,7 @@
       "outputs": ["{projectRoot}/__pycache__"],
       "options": {
         "command": "./.venv/bin/python -m compileall .",
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "serve": {
@@ -49,7 +56,7 @@
       "dependsOn": ["build"],
       "options": {
         "command": "./.venv/bin/python -m uvicorn main:app --reload",
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "test": {
@@ -57,14 +64,14 @@
       "outputs": ["{workspaceRoot}/coverage/backend"],
       "options": {
         "command": "pytest",
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "command": "flake8 .",
-        "cwd": "backend"
+        "cwd": "{projectRoot}"
       }
     }
   },

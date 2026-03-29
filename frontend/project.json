@@ -6,6 +6,7 @@
   "targets": {
     "orval": {
       "executor": "nx:run-commands",
+      "dependsOn": ["backend:extract_openapi"],
       "outputs": ["{workspaceRoot}/frontend/src/generated"],
       "inputs": [
         "{workspaceRoot}/etc/alpha-service.yaml", 

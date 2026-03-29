@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from config import settings
 
@@ -8,6 +9,7 @@ from router import router  # Get the object FROM the file
 
 import os
 
+frontend_dir = "../dist/frontend"
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
@@ -37,16 +39,13 @@ app.add_middleware(
 # Include API router
 app.include_router(router)
 
-frontend_dist = "../dist/frontend"
+# Include static file content
+app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
-# a catch-all route for the SPA (Single Page Application)
-# This MUST come after your API routes so it doesn't intercept them
-@app.get("/{full_path:path}")
-async def serve_react_app(full_path: str):
-    # If the requested file exists (like favicon.ico), serve it
-    file_path = os.path.join(frontend_dist, full_path)
-    if os.path.isfile(file_path):
-        return FileResponse(file_path)
-
-    # Otherwise, always serve index.html (the entry point for React Router)
-    return FileResponse(f"{frontend_dist}/index.html")
+@app.get("/", include_in_schema=False)
+@app.get("/{skip_path:path}", include_in_schema=False) # Hides catch-all from Swagger
+async def serve_index(skip_path: str = None): # Note: added skip_path argument to avoid errors
+    index_path = os.path.join(frontend_dir, "index.html")
+    if not os.path.exists(index_path):
+        return {"error": "Frontend build not found. Did you run 'nx build frontend'?"}
+    return FileResponse(index_path)

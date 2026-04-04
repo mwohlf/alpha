@@ -14,12 +14,11 @@ class Settings(BaseSettings):
 
     # Application
     APP_NAME: str = "Alpha API"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev")
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
 
     # Frontend
     FRONTEND_DIR: str = os.getenv("FRONTEND_DIR", "frontend/dist")
-
 
     # Server
     HOST: str = os.getenv("HOST", "127.0.0.1")
@@ -44,28 +43,28 @@ class Settings(BaseSettings):
     # OLLAMA_DEFAULT_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "kiwi_kiwi/qwen3.5-9b-abliterated_en:latest")
     OLLAMA_ENABLED: bool = os.getenv("OLLAMA_ENABLED", "True").lower() == "true"
 
-
     # Database (when needed)
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     # Telegram Bot (Pyrogram)
     TELEGRAM_API_ID: str
     TELEGRAM_API_HASH: str
-    TELEGRAM_TOKEN: str = os.getenv("TELEGRAM_TOKEN", "")
-    TELEGRAM_PHONE_NUMBER: str = os.getenv("TELEGRAM_PHONE_NUMBER", "")
+    TELEGRAM_TOKEN: str
+    TELEGRAM_PHONE_NUMBER: str
 
     # Telegram Session
     TELEGRAM_SESSION_DIR: str = os.getenv("TELEGRAM_SESSION_DIR", "backend/.telegram_sessions")
     TELEGRAM_SESSION_NAME: str = os.getenv("TELEGRAM_SESSION_NAME", "alpha_userbot")
 
     # Telegram Database
-    TELEGRAM_DATABASE_URL: str = os.getenv(
-        "TELEGRAM_DATABASE_URL",
-        "sqlite+aiosqlite:///backend/telegram_messages.db"
-    )
+    TELEGRAM_DATABASE_URL: str = os.getenv("TELEGRAM_DATABASE_URL", "sqlite+aiosqlite:///backend/telegram_messages.db")
 
     class Config:
-        env_file = ".env"
+        """
+        we load .env with default values then override with .env.prod, or anything else if it is configured in ${ENV_FILE}
+        """
+
+        env_file = (".env", os.getenv("ENV_FILE", ".env.prod"))
         case_sensitive = True
 
 

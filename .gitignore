@@ -28,3 +28,4 @@ frontend/src/generated
 .nx/installation
 .nx/workspace-data
 node_modules
+etc/.telegram_sessions/alpha_userbot.session

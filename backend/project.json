@@ -55,9 +55,9 @@
         "commands": [
           "shx mkdir -p ./etc",
           "shx mkdir -p ./frontend/dist",
-          "./backend/.venv/bin/python -m _extract_openapi > etc/alpha-service.yaml"
+          "./backend/.venv/bin/python etc/extract_openapi.py > etc/alpha-service.yaml"
         ],
-        "env": { "PYTHONPATH": "{projectRoot}" },
+        "env": { "PYTHONPATH": "{projectRoot}", "ENV_FILE": ".env.dev" },
         "parallel": false,
         "cwd": "{workspaceRoot}"
       }
@@ -69,9 +69,7 @@
         "commands": [
             "./backend/.venv/bin/python -m uvicorn backend.main:app --reload"
         ],
-        "env": {
-            "PYTHONPATH": "./backend"
-        },
+        "env": { "PYTHONPATH": "{projectRoot}", "ENV_FILE": ".env.dev" },
         "parallel": false,
         "cwd": "{workspaceRoot}"
       }

@@ -8,8 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from config import settings
 from client import OllamaClientManager
+from config import settings
 from router import router as api_router  # Import your router object
 from telegram.client import TelegramClientManager
 from telegram.database import init_db

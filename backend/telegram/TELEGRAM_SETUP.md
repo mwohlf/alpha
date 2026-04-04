@@ -23,7 +23,7 @@ Before you can use the Telegram bot, you need to obtain API credentials:
 
 1. Go to https://my.telegram.org/auth
 2. Log in with your Telegram phone number
-3. Navigate to **"API development tools"**
+3. Navigate to **"API development tools"** https://my.telegram.org/apps
 4. Create a new application by filling out the form:
    - App title: `Alpha Project` (or any name)
    - Short name: `alpha` (or any short name)

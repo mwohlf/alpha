@@ -20,9 +20,9 @@
         "options": {
           "parallel": false,
           "commands": [
-            "rimraf frontend/node_modules",
-            "rimraf backend/__pycache__",
-            "rimraf frontend/.venv"
+            "shx rm -r frontend/node_modules",
+            "shx rm -r backend/__pycache__",
+            "shx rm -r frontend/.venv"
           ]
         }
       }
@@ -33,8 +33,10 @@
     "@nx/vite": "22.6.1",
     "@nx/vitest": "22.6.1",
     "@nxlv/python": "^22.1.1",
-    "nx": "22.6.3",
-    "rimraf": "^6.1.3",
+    "@types/babel__core": "^7.20.5",
+    "nx": "22.6.4",
+    "prettier": "^3.8.1",
+    "shx": "^0.4.0",
     "vite": "^7.0.0",
     "vitest": "~4.0.8"
   },

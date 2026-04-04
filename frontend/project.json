@@ -4,33 +4,35 @@
   "projectType": "application",
   "sourceRoot": "frontend/src",
   "targets": {
-    "orval": {
+    "generate": {
       "executor": "nx:run-commands",
-      "dependsOn": ["backend:extract_openapi"],
-      "outputs": ["{workspaceRoot}/frontend/src/generated"],
+      "dependsOn": ["backend:generate_openapi_yaml"],
+      "outputs": ["{projectRoot}/src/generated"],
       "inputs": [
         "{workspaceRoot}/etc/alpha-service.yaml", 
-        "{workspaceRoot}/frontend/orval.config.ts"
+        "{projectRoot}/orval.config.ts"
       ],
       "options": {
         "command": "npx orval",
-        "cwd": "frontend"
+        "cwd": "{projectRoot}"
       }
     },
     "build": {
       "executor": "@nx/vite:build",
-      "dependsOn": ["orval"],
+      "dependsOn": ["generate"],
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/frontend",
-        "configFile": "frontend/vite.config.ts"
+        "outputPath": "{projectRoot}/dist",
+        "configFile": "{projectRoot}/vite.config.ts",
+        "cwd": "{workspaceRoot}"
       }
     },
     "serve": {
       "executor": "@nx/vite:dev-server",
-      "dependsOn": ["build"],
+      "dependsOn": ["generate"],
       "options": {
-        "buildTarget": "frontend:build"
+        "buildTarget": "frontend:build",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

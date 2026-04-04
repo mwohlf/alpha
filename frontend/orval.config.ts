@@ -1,21 +1,16 @@
-import { defineConfig } from "orval";
+import { defineConfig, NamingConvention } from "orval";
 
 export default defineConfig({
-  myApi: {
+  alpha: {
     input: "../etc/alpha-service.yaml",
 
     output: {
-      // 2. Where should Orval put the generated code?
       target: "./src/generated/endpoints.ts",
       schemas: "./src/generated/models",
-
-      // 3. Generate TanStack Query hooks instead of plain fetch calls
-      client: "react-query",
-
-      // 4. (Optional) Splits files cleanly based on your API tags
+      client: "axios",
       mode: "split",
-
       clean: true,
+      namingConvention: NamingConvention.PASCAL_CASE,
     },
   },
 });

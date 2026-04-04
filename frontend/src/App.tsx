@@ -1,18 +1,22 @@
-import { useGetHello } from "./generated/endpoints";
-import React, { useState, useEffect } from "react";
+import { useEffect } from "react"; // 1. Import useEffect
+import { useHelloStore } from "./store/useHelloStore";
 import "./App.css";
 
 function App() {
-  const { data, isLoading, error } = useGetHello();
+  const { message, loading, fetchAll, error } = useHelloStore();
 
-  if (isLoading) return <p>Loading...</p>;
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]); // Dependency array ensures it runs once
+
+  if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading users!</p>;
 
   return (
     <div className="App">
       <header className="App-header">
         <img src="/app/logo.svg" className="App-logo" alt="logo" />
-        <p>{data?.data?.message}</p>
+        <p>{message}</p>
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>

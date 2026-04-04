@@ -8,7 +8,7 @@ info:
   description: |
     OpenAPI specification for the Ollama HTTP API
 servers:
-  - url: http://localhost:11434
+  - url: http://woodstock:11434
     description: Ollama
 security: []
 components:

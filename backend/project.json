@@ -5,31 +5,12 @@
   "root": "backend",
   "sourceRoot": "{projectRoot}",
   "targets": {
-    "lock": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "./.venv/bin/python -m pip freeze > requirements.txt",
-        "cwd": "{projectRoot}"
-      }
-    },
-    "extract_openapi": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["create_venv"],
-      "outputs": ["{workspaceRoot}/etc/alpha-service.yaml"],
-      "options": {
-        "commands": [
-          "./.venv/bin/python _extract_openapi.py > ../etc/alpha-service.yaml"
-        ],
-        "parallel": false,
-        "cwd": "{projectRoot}"
-      }
-    },
-    "create_venv": {
+    "generate_venv": {
       "executor": "nx:run-commands",
       "inputs": [
         "{projectRoot}/requirements-dev.txt",
         "{projectRoot}/requirements.txt",
-        { "env": "PYTHON_VERSION" } 
+        { "env": "PYTHON_VERSION" }
       ],
       "outputs": ["{projectRoot}/.venv"],
       "options": {
@@ -42,21 +23,57 @@
         "cwd": "{projectRoot}"
       }
     },
+    "generate_ollama_client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate_venv"],
+      "outputs": ["{projectRoot}/ollama/generated"],
+      "options": {
+        "commands": [
+          "./backend/.venv/bin/openapi-python-client generate --path etc/ollama-service.yaml --output-path backend/ollama_client --overwrite --config ./etc/ollama-client.config",
+          "shx rm -rf {projectRoot}/ollama_client/.gitignore",
+          "shx rm -rf {projectRoot}/ollama_client/pyproject.toml",
+          "shx rm -rf {projectRoot}/ollama_client/REAMDE.md"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["create_venv","extract_openapi"],
+      "dependsOn": ["generate_venv", "generate_ollama_client"],
       "outputs": ["{projectRoot}/__pycache__"],
       "options": {
         "command": "./.venv/bin/python -m compileall .",
         "cwd": "{projectRoot}"
       }
     },
-    "serve": {
+    "generate_openapi_yaml": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
+      "outputs": ["{workspaceRoot}/etc/alpha-service.yaml"],
       "options": {
-        "command": "./.venv/bin/python -m uvicorn main:app --reload",
-        "cwd": "{projectRoot}"
+        "commands": [
+          "shx mkdir -p ./etc",
+          "shx mkdir -p ./frontend/dist",
+          "./backend/.venv/bin/python -m _extract_openapi > etc/alpha-service.yaml"
+        ],
+        "env": { "PYTHONPATH": "{projectRoot}" },
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["frontend:build", "build"],
+      "options": {
+        "commands": [
+            "./backend/.venv/bin/python -m uvicorn backend.main:app --reload"
+        ],
+        "env": {
+            "PYTHONPATH": "./backend"
+        },
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
       }
     },
     "test": {
@@ -70,8 +87,32 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "flake8 .",
+        "command": "./.venv/bin/ruff check .",
         "cwd": "{projectRoot}"
+      }
+    },
+    "lock": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./.venv/bin/python -m pip freeze > requirements.txt",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./.venv/bin/ruff format .",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "build_docker": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["backend:build", "frontend:build"], 
+      "options": {
+        "commands": [
+          "docker buildx build -t alpha-app -f {projectRoot}/Dockerfile ."
+        ],
+        "cwd": "{workspaceRoot}"
       }
     }
   },

@@ -1,19 +1,30 @@
-/frontend/node_modules
-/frontend/dist
-/frontend/src/api/generated
-/backend/__pycache__
-/backend/.venv
-/backend/ollama_client
-.nx/installation
+# Environment
+.env
+.env.local
+.env.dev
+.env.prod
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+backend/.venv
+backend/.ruff_cache
+backend/ollama_client
+
+# Databases
+backend/*.db
+
+# Telegram
+backend/.telegram_sessions
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/src/generated
+
+# Nx
 .nx/cache
+.nx/installation
 .nx/workspace-data
 node_modules
-dist
-
-
-
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-vite.config.*.timestamp*
-vitest.config.*.timestamp*
-frontend/src/generated/

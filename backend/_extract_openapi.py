@@ -1,9 +1,10 @@
-import sys
-import yaml
-from main import app # Import your FastAPI app instance
+import asyncio
 
-def print_openapi():
-    yaml.dump(app.openapi(), sys.stdout, sort_keys=False)
+async def main():
+    # your logic to print app.openapi()
+    import yaml
+    from main import app
+    print(yaml.dump(app.openapi()))
 
 if __name__ == "__main__":
-    print_openapi()
+    asyncio.run(main())

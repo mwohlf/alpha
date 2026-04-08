@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import os
 import sys
 from contextlib import asynccontextmanager
@@ -18,7 +19,10 @@ from telegram.client_manager import TelegramClientManager
 
 # --- Logging setup
 
-file_handler = logging.FileHandler(settings.LOGFILE)
+os.makedirs(os.path.dirname(settings.LOGFILE), exist_ok=True)
+file_handler = logging.handlers.RotatingFileHandler(
+    settings.LOGFILE, maxBytes=5 * 1024 * 1024, backupCount=3
+)
 stdout_handler = logging.StreamHandler(sys.stdout)
 
 logging.basicConfig(

@@ -27,5 +27,5 @@ frontend/src/generated
 node_modules
 etc/.telegram_sessions/alpha_userbot.session
 etc/alpha-service.yaml
-log/alpha.log
+log/
 etc/telegram_messages.db

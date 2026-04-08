@@ -50,6 +50,7 @@
     "generate_openapi_yaml": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
+      "inputs": [],
       "outputs": ["{workspaceRoot}/etc/alpha-service.yaml"],
       "options": {
         "commands": [

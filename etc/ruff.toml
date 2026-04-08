@@ -1,5 +1,5 @@
 # backend/ruff.toml
-line-length = 160
+line-length = 180
 target-version = "py314"
 
 [lint]

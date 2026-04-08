@@ -29,10 +29,10 @@
       "outputs": ["{projectRoot}/ollama/generated"],
       "options": {
         "commands": [
-          "./backend/.venv/bin/openapi-python-client generate --path etc/ollama-service.yaml --output-path backend/ollama_client --overwrite --config ./etc/ollama-client.config",
-          "shx rm -rf {projectRoot}/ollama_client/.gitignore",
-          "shx rm -rf {projectRoot}/ollama_client/pyproject.toml",
-          "shx rm -rf {projectRoot}/ollama_client/REAMDE.md"
+          "./backend/.venv/bin/openapi-python-client generate --path etc/ollama-service.yaml --output-path backend/ollama/client --overwrite --config ./etc/ollama-client.config",
+          "shx rm -rf {projectRoot}/ollama/client/.gitignore",
+          "shx rm -rf {projectRoot}/ollama/client/pyproject.toml",
+          "shx rm -rf {projectRoot}/ollama/client/REAMDE.md"
         ],
         "parallel": false,
         "cwd": "{workspaceRoot}"
@@ -85,7 +85,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./.venv/bin/ruff check .",
+        "command": "./.venv/bin/ruff check --config ../etc/ruff.toml .",
         "cwd": "{projectRoot}"
       }
     },
@@ -99,7 +99,7 @@
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./.venv/bin/ruff format .",
+        "command": "./.venv/bin/ruff format --config ../etc/ruff.toml .",
         "cwd": "{projectRoot}"
       }
     },

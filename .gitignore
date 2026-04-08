@@ -8,14 +8,11 @@
 **/__pycache__/
 **/*.pyc
 **/*.pyo
+
 backend/.venv
 backend/.ruff_cache
-backend/ollama_client
-
-# Databases
+backend/ollama/client/
 backend/*.db
-
-# Telegram
 backend/.telegram_sessions
 
 # Frontend
@@ -29,3 +26,6 @@ frontend/src/generated
 .nx/workspace-data
 node_modules
 etc/.telegram_sessions/alpha_userbot.session
+etc/alpha-service.yaml
+log/alpha.log
+etc/telegram_messages.db

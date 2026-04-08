@@ -7,13 +7,17 @@ from typing import AsyncGenerator, Dict, List, Optional
 
 import httpx
 
-logger = logging.getLogger("uvicorn.error")
+logger = logging.getLogger("alpha")
 
 
 class OllamaClientManager:
     """Manages the Ollama client connection and provides chat functionality."""
 
-    def __init__(self, base_url: str = "http://localhost:11434", default_model: str = "llama3.2:3b"):
+    def __init__(
+        self,
+        base_url: str = "http://localhost:11434",
+        default_model: str = "llama3.2:3b",
+    ):
         """
         Initialize the Ollama client manager.
 
@@ -49,7 +53,9 @@ class OllamaClientManager:
             version_data = response.json()
 
             self._running = True
-            logger.info(f"Ollama client started successfully (version: {version_data.get('version', 'unknown')})")
+            logger.info(
+                f"Ollama client started successfully (version: {version_data.get('version', 'unknown')})"
+            )
 
             # Try to list available models
             try:
@@ -58,12 +64,16 @@ class OllamaClientManager:
                     model_names = [m.get("name", "unknown") for m in models[:5]]
                     logger.info(f"Available models: {', '.join(model_names)}")
                 else:
-                    logger.warning("No models available. You may need to pull a model first.")
+                    logger.warning(
+                        "No models available. You may need to pull a model first."
+                    )
             except Exception as e:
                 logger.warning(f"Could not list models: {e}")
 
         except httpx.ConnectError:
-            raise RuntimeError(f"Could not connect to Ollama at {self.base_url}. Is Ollama running?")
+            raise RuntimeError(
+                f"Could not connect to Ollama at {self.base_url}. Is Ollama running?"
+            )
         except Exception as e:
             raise RuntimeError(f"Failed to start Ollama client: {e}")
 
@@ -154,7 +164,9 @@ class OllamaClientManager:
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error during chat: {e.response.status_code} - {e.response.text}")
+            logger.error(
+                f"HTTP error during chat: {e.response.status_code} - {e.response.text}"
+            )
             raise RuntimeError(f"Chat request failed: {e.response.status_code}")
         except Exception as e:
             logger.error(f"Error during chat: {e}", exc_info=True)
@@ -195,11 +207,14 @@ class OllamaClientManager:
             payload["options"] = options
 
         try:
-            async with self._client.stream("POST", "/api/chat", json=payload) as response:
+            async with self._client.stream(
+                "POST", "/api/chat", json=payload
+            ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:
                         import json
+
                         try:
                             yield json.loads(line)
                         except json.JSONDecodeError:

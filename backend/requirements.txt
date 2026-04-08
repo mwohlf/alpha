@@ -42,7 +42,7 @@ typing_extensions==4.15.0
 urllib3==2.6.3
 webencodings==0.5.1
 zstandard==0.25.0
-Pyrogram==2.0.106
+pyrofork==2.3.69
 fastapi-cors==0.0.6
 sqlalchemy==2.0.36
 aiosqlite==0.20.0

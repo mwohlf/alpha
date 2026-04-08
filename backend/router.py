@@ -3,7 +3,7 @@ from typing import List, Optional
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from client import OllamaClientManager
+from ollama.ollama_client import OllamaClientManager
 
 from config import settings
 from models import (
@@ -18,7 +18,7 @@ from models import (
     TelegramStatusResponse,
     TelegramUserInfo,
 )
-from telegram.database import clear_messages, get_message_count, get_recent_messages
+from telegram.message_store import clear_messages, get_message_count, get_recent_messages
 
 router = APIRouter()
 

@@ -4,7 +4,7 @@ Loads settings from environment variables with .env file support.
 """
 
 import os
-from typing import List
+from typing import List, Optional
 
 from pydantic_settings import BaseSettings
 
@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Alpha API"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev")
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
+    LOGFILE: str = os.getenv("LOGFILE", "log/alpha.log")
 
     # Frontend
     FRONTEND_DIR: str = os.getenv("FRONTEND_DIR", "frontend/dist")
@@ -39,25 +40,24 @@ class Settings(BaseSettings):
 
     # Ollama
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://woodstock:11434")
-    OLLAMA_DEFAULT_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "huihui_ai/dolphin3-abliterated:latest")
+    OLLAMA_DEFAULT_MODEL: str = os.getenv(
+        "OLLAMA_DEFAULT_MODEL", "huihui_ai/dolphin3-abliterated:latest"
+    )
     # OLLAMA_DEFAULT_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "kiwi_kiwi/qwen3.5-9b-abliterated_en:latest")
     OLLAMA_ENABLED: bool = os.getenv("OLLAMA_ENABLED", "True").lower() == "true"
 
     # Database (when needed)
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-    # Telegram Bot (Pyrogram)
+    # Telegram Bot (pyrogram)
     TELEGRAM_API_ID: str
     TELEGRAM_API_HASH: str
-    TELEGRAM_TOKEN: str
-    TELEGRAM_PHONE_NUMBER: str
-
-    # Telegram Session
-    TELEGRAM_SESSION_DIR: str = os.getenv("TELEGRAM_SESSION_DIR", "backend/.telegram_sessions")
-    TELEGRAM_SESSION_NAME: str = os.getenv("TELEGRAM_SESSION_NAME", "alpha_userbot")
+    TELEGRAM_SESSION_NAME: str
+    # will be null on the first run
+    TELEGRAM_SESSION_STRING: Optional[str] = None
 
     # Telegram Database
-    TELEGRAM_DATABASE_URL: str = os.getenv("TELEGRAM_DATABASE_URL", "sqlite+aiosqlite:///backend/telegram_messages.db")
+    TELEGRAM_DATABASE_URL: str
 
     class Config:
         """
@@ -68,5 +68,5 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-# Global settings instance
+# Global settings instance, initialized on import
 settings = Settings()

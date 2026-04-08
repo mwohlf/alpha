@@ -3,16 +3,25 @@ Database models and operations for Telegram message storage.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import List, Optional
 
-from sqlalchemy import BigInteger, Column, DateTime, Index, Integer, String, Text, select, delete
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    DateTime,
+    Index,
+    Integer,
+    String,
+    Text,
+    delete,
+    func,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-from config import settings
-
-logger = logging.getLogger("uvicorn.error")
+logger = logging.getLogger("alpha")
 
 Base = declarative_base()
 
@@ -35,7 +44,9 @@ class TelegramMessage(Base):
     message_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     reply_to_message_id = Column(BigInteger, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(UTC), server_default=func.now()
+    )
 
     # Indexes for common queries
     __table_args__ = (
@@ -50,15 +61,14 @@ _engine = None
 _async_session_maker = None
 
 
-async def init_db() -> None:
+async def init_db(database_url: str) -> None:
     """Initialize the database engine and create tables."""
     global _engine, _async_session_maker
 
-    logger.info(f"Initializing Telegram database: {settings.TELEGRAM_DATABASE_URL}")
+    logger.info(f"Initializing Telegram database: {database_url}")
 
     _engine = create_async_engine(
-        settings.TELEGRAM_DATABASE_URL,
-        echo=settings.DEBUG,
+        database_url,
         future=True,
     )
 
@@ -94,7 +104,9 @@ async def add_message(message_data: dict) -> None:
             message = TelegramMessage(**message_data)
             session.add(message)
             await session.commit()
-            logger.debug(f"Stored message {message_data['message_id']} from chat {message_data['chat_id']}")
+            logger.debug(
+                f"Stored message {message_data['message_id']} from chat {message_data['chat_id']}"
+            )
         except Exception as e:
             await session.rollback()
             logger.error(f"Failed to store message: {e}", exc_info=True)
@@ -102,8 +114,7 @@ async def add_message(message_data: dict) -> None:
 
 
 async def get_recent_messages(
-    limit: int = 100,
-    chat_id: Optional[int] = None
+    limit: int = 100, chat_id: Optional[int] = None
 ) -> List[TelegramMessage]:
     """
     Get recent messages from the database.
@@ -117,7 +128,11 @@ async def get_recent_messages(
     """
     async with get_db_session() as session:
         try:
-            query = select(TelegramMessage).order_by(TelegramMessage.date.desc()).limit(limit)
+            query = (
+                select(TelegramMessage)
+                .order_by(TelegramMessage.date.desc())
+                .limit(limit)
+            )
 
             if chat_id is not None:
                 query = query.where(TelegramMessage.chat_id == chat_id)
@@ -139,9 +154,10 @@ async def get_message_count() -> int:
     """
     async with get_db_session() as session:
         try:
-            result = await session.execute(select(TelegramMessage))
-            messages = result.scalars().all()
-            return len(messages)
+            result = await session.execute(
+                select(func.count()).select_from(TelegramMessage)
+            )
+            return result.scalar()
         except Exception as e:
             logger.error(f"Failed to count messages: {e}", exc_info=True)
             return 0
@@ -156,12 +172,8 @@ async def clear_messages() -> int:
     """
     async with get_db_session() as session:
         try:
-            # Get count before deleting
-            result = await session.execute(select(TelegramMessage))
-            count = len(result.scalars().all())
-
-            # Delete all messages
-            await session.execute(delete(TelegramMessage))
+            result = await session.execute(delete(TelegramMessage))
+            count = result.rowcount
             await session.commit()
 
             logger.info(f"Cleared {count} messages from database")

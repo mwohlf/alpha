@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -8,15 +9,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from client import OllamaClientManager
+from ollama.ollama_client import OllamaClientManager
 from config import settings
 from router import router as api_router  # Import your router object
-from telegram.client import TelegramClientManager
-from telegram.database import init_db
+from telegram.message_store import init_db
+from telegram.client_manager import TelegramClientManager
 
-# Logging setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("uvicorn.error")
+
+# --- Logging setup
+
+file_handler = logging.FileHandler(settings.LOGFILE)
+stdout_handler = logging.StreamHandler(sys.stdout)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(message)s",
+    handlers=[file_handler, stdout_handler],
+)
+logger = logging.getLogger("alpha")
+for uvicorn_logger in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    logging.getLogger(uvicorn_logger).handlers = logging.root.handlers
+    logging.getLogger(uvicorn_logger).propagate = False
 
 
 # --- Service Callbacks ---
@@ -77,7 +90,9 @@ async def start_telegram(app: FastAPI):
 
 async def stop_telegram(app: FastAPI):
     """Callback to stop the Telegram client."""
-    manager: Optional[TelegramClientManager] = getattr(app.state, "telegram_manager", None)
+    manager: Optional[TelegramClientManager] = getattr(
+        app.state, "telegram_manager", None
+    )
     if manager:
         await manager.stop()
         app.state.telegram_manager = None
@@ -102,7 +117,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting application in {settings.ENVIRONMENT} mode")
 
     # Initialize Persistent Storage
-    await init_db()
+    await init_db(settings.TELEGRAM_DATABASE_URL)
 
     # Set initial config parameters
     update_app_config(

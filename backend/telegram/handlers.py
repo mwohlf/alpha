@@ -9,9 +9,9 @@ from typing import List, Dict
 from pyrogram import Client
 from pyrogram.types import Message
 
-from telegram.database import add_message
+from telegram.message_store import add_message
 
-logger = logging.getLogger("uvicorn.error")
+logger = logging.getLogger("alpha")
 
 
 SYSTEM_PROMPT = """
@@ -58,23 +58,19 @@ async def _process_with_ollama(client: Client, message: Message, text: str) -> N
         messages: List[Dict[str, str]] = []
 
         # Add system message
-        messages.append({
-            "role": "system",
-            "content": SYSTEM_PROMPT
-        })
+        messages.append({"role": "system", "content": SYSTEM_PROMPT})
 
         # If this is a reply, include the original message for context
         if message.reply_to_message and message.reply_to_message.text:
-            messages.append({
-                "role": "user",
-                "content": f"[Previous message]: {message.reply_to_message.text}"
-            })
+            messages.append(
+                {
+                    "role": "user",
+                    "content": f"[Previous message]: {message.reply_to_message.text}",
+                }
+            )
 
         # Add the current message
-        messages.append({
-            "role": "user",
-            "content": text
-        })
+        messages.append({"role": "user", "content": text})
 
         logger.info(f"Processing message with Ollama: {text[:50]}...")
 
@@ -145,7 +141,8 @@ async def handle_new_message(client: Client, message: Message) -> None:
         message_data = {
             "message_id": message.id,
             "chat_id": message.chat.id,
-            "chat_title": getattr(message.chat, "title", None) or getattr(message.chat, "first_name", "Private Chat"),
+            "chat_title": getattr(message.chat, "title", None)
+            or getattr(message.chat, "first_name", "Private Chat"),
             "chat_type": message.chat.type.value if message.chat.type else "unknown",
             "user_id": message.from_user.id if message.from_user else None,
             "username": message.from_user.username if message.from_user else None,
@@ -154,7 +151,9 @@ async def handle_new_message(client: Client, message: Message) -> None:
             "text": message.text if message.text else message.caption,
             "message_type": _get_message_type(message),
             "date": message.date if message.date else datetime.utcnow(),
-            "reply_to_message_id": message.reply_to_message.id if message.reply_to_message else None,
+            "reply_to_message_id": message.reply_to_message.id
+            if message.reply_to_message
+            else None,
         }
 
         # Store in database
@@ -163,7 +162,11 @@ async def handle_new_message(client: Client, message: Message) -> None:
         # Log the message
         chat_name = message_data["chat_title"]
         user_name = message_data["first_name"] or message_data["username"] or "Unknown"
-        text_preview = (message_data["text"][:50] + "...") if message_data["text"] and len(message_data["text"]) > 50 else message_data["text"]
+        text_preview = (
+            (message_data["text"][:50] + "...")
+            if message_data["text"] and len(message_data["text"]) > 50
+            else message_data["text"]
+        )
 
         logger.info(
             f"Received {message_data['message_type']} from {user_name} in {chat_name}: {text_preview}"

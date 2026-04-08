@@ -1,26 +1,23 @@
-# Alpha Project
+# Alpha
 
-This project is a simple React frontend and FastAPI backend application using nx for build and deployment.
+React frontend and FastAPI backend, built with nx.
 
-requirements for local host:
+## Requirements
+
 - node
 - npm
 - python3
 - docker
 
-<br>
-
-## setup
-
-this uses the config in alpha/package.json to install dependencies from the top level `package.json`
-plus anything configured in the workspaces `frontend` and `backend`
+## Setup
 
 ```bash
-cd alpha
+npm install
 ```
-<br>
 
-clean:
+## Commands
+
+**Clean:**
 ```bash
 rm -rf \
   .nx/cache \
@@ -32,73 +29,66 @@ rm -rf \
   backend/.venv \
   backend/.ruff_cache \
   backend/__pycache__ \
+  backend/ollama/client \
   frontend/dist \
   frontend/node_modules \
   frontend/src/generated \
-  etc/alpha-service.yaml \
-  package-lock.json
+  etc/alpha-service.yaml
 
 npm install
 ```
-<br>
 
-prepare:
-```bash
-./nx reset
-./nx init --no-interactive --nxCloud=false
-./nx report
-```
-<br>
-
-build:
+**Build:**
 ```bash
 ./nx build backend
 ./nx build frontend
 ```
-<br>
 
-run:
+**Run:**
 ```bash
 ./nx serve backend
 ./nx serve frontend
-```  
-<br>
+```
 
-
-create docker image and run local:
+**Docker:**
 ```bash
 ./nx build_docker backend
 docker run -p 8000:8000 alpha-app
 ```
-<br>
 
-## details
+## URLs
 
-The frontend will be running on `http://localhost:3000`. The frontend will automatically proxy requests to the backend.
+| | |
+|---|---|
+| Frontend (proxied) | http://localhost:3000 |
+| Backend | http://localhost:8000 |
 
-The backend will be running on `http://127.0.0.1:8000`.
+## CI
 
-<br>
-
-CI build:
 ```bash
-cd alpha
 npm install
 ./nx build_docker backend
 ```
-This actually builds the backend twice, once for loca use, once in the multi-stage docker build.
 
+## Telegram Setup
 
-running local:
+Telegram credentials go in `.env.dev`.
 
-http://127.0.0.1:3000/index.html   - serving with backend by proxy
+**API credentials** (`TELEGRAM_API_ID`, `TELEGRAM_API_HASH`):
+1. Go to https://my.telegram.org/apps
+2. Log in and create an application
+3. Copy the API ID and API Hash into `.env.dev`
 
-http://127.0.0.1:8000/index.html   - serving frontend by the backend
+**Session string** (`TELEGRAM_SESSION_STRING`):
 
-<br>
+If `TELEGRAM_SESSION_STRING` is left empty, the app will prompt for authentication interactively on first run — enter your phone number and the OTP sent to your Telegram app. The session string will be logged to stdout. Copy it into `.env.dev`:
 
+```
+TELEGRAM_SESSION_STRING=<paste here>
+```
 
-## links
+This only needs to be done once. The session string authenticates the app without requiring login on subsequent starts.
 
-(ollama openAPI definition)[https://github.com/ollama/ollama/tree/main/docs]
+## Links
 
+- [Ollama OpenAPI definition](https://github.com/ollama/ollama/tree/main/docs)

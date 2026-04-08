@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     PORT: int = int(os.getenv("PORT", "8000"))
 
     # Security
-    SECRET_KEY: str
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
@@ -50,14 +50,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     # Telegram Bot (pyrogram)
-    TELEGRAM_API_ID: str
-    TELEGRAM_API_HASH: str
-    TELEGRAM_SESSION_NAME: str
+    TELEGRAM_API_ID: str = ""
+    TELEGRAM_API_HASH: str = ""
+    TELEGRAM_SESSION_NAME: str = ""
     # will be null on the first run
     TELEGRAM_SESSION_STRING: Optional[str] = None
 
     # Telegram Database
-    TELEGRAM_DATABASE_URL: str
+    TELEGRAM_DATABASE_URL: str = ""
 
     class Config:
         """

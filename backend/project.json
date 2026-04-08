@@ -50,7 +50,13 @@
     "generate_openapi_yaml": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
-      "inputs": [],
+      "inputs": [
+        "{projectRoot}/main.py",
+        "{projectRoot}/router.py",
+        "{projectRoot}/models.py",
+        "{projectRoot}/config.py",
+        "{workspaceRoot}/etc/extract_openapi.py"
+      ],
       "outputs": ["{workspaceRoot}/etc/alpha-service.yaml"],
       "options": {
         "commands": [

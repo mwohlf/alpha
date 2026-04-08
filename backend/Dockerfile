@@ -59,7 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create user FIRST
 RUN adduser --disabled-password --gecos "" appuser && \
     mkdir -p /app/etc /app/log && \
-    chown appuser:appuser /app/etc /app/log
+    chown appuser:appuser /app /app/etc /app/log
 
 # TODO: copy this from the host, no need to re-install in the builder
 # Copy the venv from builder (avoids pip install in runner)

@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Alpha API"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev")
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
-    LOGFILE: str = os.getenv("LOGFILE", "/app/log/alpha.log")
+    LOGFILE: str = os.getenv("LOGFILE", "log/alpha.log")
 
     # Frontend
     FRONTEND_DIR: str = os.getenv("FRONTEND_DIR", "frontend/dist")

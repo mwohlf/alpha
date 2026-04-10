@@ -35,6 +35,25 @@
   border-left: 3px solid #61dafb;
 }
 
+.sidebar-logout {
+  display: block;
+  width: calc(100% - 48px);
+  margin: 16px 24px 0;
+  padding: 8px;
+  background: none;
+  border: 1px solid #3a3f4b;
+  border-radius: 4px;
+  color: #636d83;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.sidebar-logout:hover {
+  border-color: #e06c75;
+  color: #e06c75;
+}
+
 .content {
   flex: 1;
   padding: 32px;

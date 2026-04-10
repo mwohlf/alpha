@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     delete,
+    distinct,
     func,
     select,
 )
@@ -161,6 +162,55 @@ async def get_message_count() -> int:
         except Exception as e:
             logger.error(f"Failed to count messages: {e}", exc_info=True)
             return 0
+
+
+async def get_users() -> List[dict]:
+    """
+    Return distinct users with their message counts.
+    """
+    async with get_db_session() as session:
+        try:
+            query = (
+                select(
+                    TelegramMessage.user_id,
+                    TelegramMessage.username,
+                    TelegramMessage.first_name,
+                    TelegramMessage.last_name,
+                    func.count(TelegramMessage.id).label("message_count"),
+                )
+                .where(TelegramMessage.user_id.isnot(None))
+                .group_by(
+                    TelegramMessage.user_id,
+                    TelegramMessage.username,
+                    TelegramMessage.first_name,
+                    TelegramMessage.last_name,
+                )
+                .order_by(func.count(TelegramMessage.id).desc())
+            )
+            result = await session.execute(query)
+            return [row._asdict() for row in result.all()]
+        except Exception as e:
+            logger.error(f"Failed to query users: {e}", exc_info=True)
+            raise
+
+
+async def get_messages_by_user(user_id: int, limit: int = 100) -> List[TelegramMessage]:
+    """
+    Return messages for a specific user_id.
+    """
+    async with get_db_session() as session:
+        try:
+            query = (
+                select(TelegramMessage)
+                .where(TelegramMessage.user_id == user_id)
+                .order_by(TelegramMessage.date.desc())
+                .limit(limit)
+            )
+            result = await session.execute(query)
+            return list(result.scalars().all())
+        except Exception as e:
+            logger.error(f"Failed to query messages for user {user_id}: {e}", exc_info=True)
+            raise
 
 
 async def clear_messages() -> int:

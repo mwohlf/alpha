@@ -94,4 +94,24 @@ class TelegramClearResponse(BaseModel):
     messages_deleted: int
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TelegramUserSummary(BaseModel):
+    """A distinct user seen in stored Telegram messages."""
+
+    user_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    message_count: int
+
+
 ModelListGetResponse.model_rebuild()

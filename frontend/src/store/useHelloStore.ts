@@ -1,9 +1,5 @@
 import { create } from "zustand";
-// 1. Import the wrapper function
-import { getAlphaAPI } from "../generated/endpoints";
-
-// 2. Initialize the API instance (outside the store)
-const api = getAlphaAPI();
+import { api } from "../api";
 
 interface HelloState {
   message: string;

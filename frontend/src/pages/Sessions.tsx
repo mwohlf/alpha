@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSessionsStore } from "../store/useSessionsStore";
 import "./Sessions.css";
 
@@ -12,10 +12,15 @@ function displayName(user: { username?: string | null; first_name?: string | nul
 export default function Sessions() {
   const { users, selectedUserId, messages, loadingUsers, loadingMessages, error, fetchUsers, selectUser } =
     useSessionsStore();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <div className="sessions">
@@ -38,20 +43,24 @@ export default function Sessions() {
       </div>
 
       <div className="sessions-detail">
-        <h2>Messages</h2>
-        {loadingMessages && <p className="sessions-status">Loading...</p>}
-        {!selectedUserId && !loadingMessages && <p className="sessions-status">Select a user to view messages.</p>}
-        <ul>
+        <div className="sessions-messages">
+          {loadingMessages && <p className="sessions-status">Loading...</p>}
+          {!selectedUserId && !loadingMessages && (
+            <p className="sessions-status">Select a user to view messages.</p>
+          )}
           {messages.map((msg) => (
-            <li key={msg.id} className="sessions-message">
-              <div className="sessions-message-meta">
-                <span className="sessions-message-chat">{msg.chat.title ?? `Chat ${msg.chat.chat_id}`}</span>
-                <span className="sessions-message-date">{new Date(msg.date).toLocaleString()}</span>
+            <div key={msg.id} className={`sessions-bubble-row ${msg.outgoing ? "outgoing" : "incoming"}`}>
+              <div className="sessions-bubble">
+                {!msg.outgoing && (
+                  <span className="sessions-bubble-chat">{msg.chat.title ?? `Chat ${msg.chat.chat_id}`}</span>
+                )}
+                <p className="sessions-bubble-text">{msg.text ?? <em>non-text message</em>}</p>
+                <span className="sessions-bubble-time">{new Date(msg.date).toLocaleString()}</span>
               </div>
-              <p className="sessions-message-text">{msg.text ?? <em>non-text message</em>}</p>
-            </li>
+            </div>
           ))}
-        </ul>
+          <div ref={bottomRef} />
+        </div>
       </div>
     </div>
   );

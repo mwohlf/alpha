@@ -72,6 +72,7 @@ class TelegramMessageResponse(BaseModel):
     message_type: str
     date: datetime
     reply_to_message_id: Optional[int] = None
+    outgoing: bool = False
     created_at: datetime
 
     class Config:

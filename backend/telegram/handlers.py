@@ -83,8 +83,24 @@ async def _process_with_ollama(client: Client, message: Message, text: str) -> N
 
             if response_text:
                 # Send the response back to the chat
-                await message.reply_text(response_text)
+                sent = await message.reply_text(response_text)
                 logger.info(f"Sent Ollama response: {response_text[:50]}...")
+                # Store the outgoing message
+                await add_message({
+                    "message_id": sent.id,
+                    "chat_id": sent.chat.id,
+                    "chat_title": getattr(sent.chat, "title", None) or getattr(sent.chat, "first_name", "Private Chat"),
+                    "chat_type": sent.chat.type.value if sent.chat.type else "unknown",
+                    "user_id": None,
+                    "username": None,
+                    "first_name": None,
+                    "last_name": None,
+                    "text": response_text,
+                    "message_type": "text",
+                    "date": sent.date if sent.date else datetime.utcnow(),
+                    "reply_to_message_id": message.id,
+                    "outgoing": True,
+                })
             else:
                 logger.warning("Ollama returned empty response")
         else:
@@ -154,6 +170,7 @@ async def handle_new_message(client: Client, message: Message) -> None:
             "reply_to_message_id": message.reply_to_message.id
             if message.reply_to_message
             else None,
+            "outgoing": bool(message.outgoing),
         }
 
         # Store in database

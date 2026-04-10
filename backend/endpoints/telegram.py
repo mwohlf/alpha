@@ -80,5 +80,6 @@ def _to_response(msg) -> TelegramMessageResponse:
         message_type=msg.message_type,
         date=msg.date,
         reply_to_message_id=msg.reply_to_message_id,
+        outgoing=bool(msg.outgoing),
         created_at=msg.created_at,
     )

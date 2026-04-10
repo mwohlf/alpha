@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Column,
     DateTime,
     Index,
@@ -45,6 +46,7 @@ class TelegramMessage(Base):
     message_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     reply_to_message_id = Column(BigInteger, nullable=True)
+    outgoing = Column(Boolean, nullable=False, default=False, server_default="0")
     created_at = Column(
         DateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
@@ -196,14 +198,20 @@ async def get_users() -> List[dict]:
 
 async def get_messages_by_user(user_id: int, limit: int = 100) -> List[TelegramMessage]:
     """
-    Return messages for a specific user_id.
+    Return all messages in chats where the user has participated (both directions).
     """
     async with get_db_session() as session:
         try:
+            chats_subquery = (
+                select(TelegramMessage.chat_id)
+                .where(TelegramMessage.user_id == user_id)
+                .distinct()
+                .scalar_subquery()
+            )
             query = (
                 select(TelegramMessage)
-                .where(TelegramMessage.user_id == user_id)
-                .order_by(TelegramMessage.date.desc())
+                .where(TelegramMessage.chat_id.in_(chats_subquery))
+                .order_by(TelegramMessage.date.asc())
                 .limit(limit)
             )
             result = await session.execute(query)

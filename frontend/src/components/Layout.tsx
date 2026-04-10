@@ -19,21 +19,26 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      <nav className="sidebar">
-        <ul>
-          {NAV_ITEMS.map(({ to, label }) => (
-            <li key={to}>
-              <NavLink to={to} className={({ isActive }) => isActive ? "active" : ""}>
-                {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-        <button className="sidebar-logout" onClick={handleLogout}>Sign out</button>
-      </nav>
-      <main className="content">
-        <Outlet />
-      </main>
+      <header className="topbar">
+        <span className="topbar-title">Alpha</span>
+        <button className="topbar-logout" onClick={handleLogout}>Sign out</button>
+      </header>
+      <div className="layout-body">
+        <nav className="sidebar">
+          <ul>
+            {NAV_ITEMS.map(({ to, label }) => (
+              <li key={to}>
+                <NavLink to={to} className={({ isActive }) => isActive ? "active" : ""}>
+                  {label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <main className="content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

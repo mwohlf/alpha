@@ -1,36 +1,20 @@
-import { useEffect } from "react"; // 1. Import useEffect
-import { useHelloStore } from "./store/useHelloStore";
-import "./App.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import Layout from "./components/Layout";
+import Models from "./pages/Models";
+import Sessions from "./pages/Sessions";
+import Setup from "./pages/Setup";
 
-function App() {
-  const { message, loading, fetchAll, error } = useHelloStore();
-
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]); // Dependency array ensures it runs once
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error loading users!</p>;
-
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src="/app/logo.svg" className="App-logo" alt="logo" />
-        <p>{message}</p>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter basename="/app">
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Navigate to="/setup" replace />} />
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/models" element={<Models />} />
+          <Route path="/sessions" element={<Sessions />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

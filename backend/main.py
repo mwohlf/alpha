@@ -7,12 +7,12 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from ollama.ollama_client import OllamaClientManager
 from config import settings
-from router import router as api_router  # Import your router object
+from endpoints.router import router as api_router
 from telegram.message_store import init_db
 from telegram.client_manager import TelegramClientManager
 
@@ -175,7 +175,7 @@ async def get_index():
 @app.get("/", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 async def serve_index_file():
-    return await get_index()
+    return RedirectResponse(url="/app/")
 
 
 @app.get("/{skip_path:path}", include_in_schema=False)

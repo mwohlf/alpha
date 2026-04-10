@@ -5,11 +5,10 @@ const rewriteRootToApp = () => ({
   name: "rewrite-root-to-app",
   configureServer(server: any) {
     server.middlewares.use((req: any, res: any, next: any) => {
-      // If the browser requests the root URL...
-      if (req.url === "/" || req.url === "/index.html") {
-        // ...silently change the request to /app/ before Vite processes it.
-        // The browser address bar will NOT change.
-        req.url = "/app/";
+      if (req.url === "/" || req.url === "/index.html" || req.url === "/app") {
+        res.writeHead(302, { Location: "/app/" });
+        res.end();
+        return;
       }
       next();
     });

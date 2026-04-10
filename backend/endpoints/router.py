@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from ollama.ollama_client import OllamaClientManager
 
 from config import settings
-from models import (
+from endpoints.models import (
     HealthGetResponse,
     HelloGetResponse,
     Model,
@@ -131,24 +131,11 @@ def get_protected() -> ProtectedGetResponse:
     operation_id="get_telegram_status",
     dependencies=[Depends(verify_token)],
 )
-async def get_telegram_status(request: Request) -> TelegramStatusResponse:
-    """
-    Get Telegram client connection status and message count.
-    Requires JWT authentication.
-    """
-    telegram_manager = getattr(request.app.state, "telegram_manager", None)
-
-    if not telegram_manager:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Telegram client not initialized. Check TELEGRAM_API_ID and TELEGRAM_API_HASH configuration.",
-        )
-
+async def get_telegram_status(telegram_manager=Depends(get_telegram_manager)) -> TelegramStatusResponse:
     connected = telegram_manager.is_running()
     user_id = telegram_manager.get_user_id()
     username = telegram_manager.get_username()
     message_count = await get_message_count()
-
     return TelegramStatusResponse(connected=connected, user_id=user_id, username=username, message_count=message_count)
 
 
@@ -161,23 +148,10 @@ async def get_telegram_status(request: Request) -> TelegramStatusResponse:
     dependencies=[Depends(verify_token)],
 )
 async def get_telegram_messages(
-    request: Request,
+    telegram_manager=Depends(get_telegram_manager),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of messages to return"),
     chat_id: Optional[int] = Query(None, description="Filter by chat ID"),
 ) -> List[TelegramMessageResponse]:
-    """
-    Get recent Telegram messages from the database.
-    Requires JWT authentication.
-
-    Args:
-        limit: Maximum number of messages to return (1-1000, default 100)
-        chat_id: Optional filter by chat ID
-    """
-    telegram_manager = getattr(request.app.state, "telegram_manager", None)
-
-    if not telegram_manager:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Telegram client not initialized.")
-
     try:
         messages = await get_recent_messages(limit=limit, chat_id=chat_id)
 
@@ -214,16 +188,7 @@ async def get_telegram_messages(
     operation_id="clear_telegram_messages",
     dependencies=[Depends(verify_token)],
 )
-async def clear_telegram_messages(request: Request) -> TelegramClearResponse:
-    """
-    Clear all stored Telegram messages from the database.
-    Requires JWT authentication.
-    """
-    telegram_manager = getattr(request.app.state, "telegram_manager", None)
-
-    if not telegram_manager:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Telegram client not initialized.")
-
+async def clear_telegram_messages(telegram_manager=Depends(get_telegram_manager)) -> TelegramClearResponse:
     try:
         deleted_count = await clear_messages()
         return TelegramClearResponse(success=True, messages_deleted=deleted_count)

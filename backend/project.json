@@ -52,8 +52,8 @@
       "dependsOn": ["build"],
       "inputs": [
         "{projectRoot}/main.py",
-        "{projectRoot}/router.py",
-        "{projectRoot}/models.py",
+        "{projectRoot}/endpoints/router.py",
+        "{projectRoot}/endpoints/models.py",
         "{projectRoot}/config.py",
         "{workspaceRoot}/etc/extract_openapi.py"
       ],

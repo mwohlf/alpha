@@ -1,11 +1,14 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import "./Login.css";
 
 export default function Login() {
   const login = useAuthStore((s) => s.login);
+  const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
+
+  if (token) return <Navigate to="/setup" replace />;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,7 @@
 import { ReactElement } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
+import Chat from "./pages/Chat";
 import Login from "./pages/Login";
 import Models from "./pages/Models";
 import Sessions from "./pages/Sessions";
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/setup" element={<Setup />} />
           <Route path="/models" element={<Models />} />
           <Route path="/sessions" element={<Sessions />} />
+          <Route path="/chat" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>

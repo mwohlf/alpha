@@ -1,18 +1,9 @@
-from datetime import UTC, datetime, timedelta
-
-import jwt
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import HTTPException, Request, status
 from ollama.ollama_client import OllamaClientManager
-from passlib.context import CryptContext
-
-from config import settings
-
-security = HTTPBearer()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from telegram.client_manager import TelegramClientManager
 
 
-def get_telegram_manager(request: Request):
+def get_telegram_manager(request: Request) -> TelegramClientManager:
     manager = getattr(request.app.state, "telegram_manager", None)
     if not manager:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Telegram client not initialized.")
@@ -26,19 +17,3 @@ def get_ollama_manager(request: Request) -> OllamaClientManager:
     return manager
 
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return payload
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-
-def create_access_token(data: dict) -> str:
-    payload = data.copy()
-    payload["exp"] = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

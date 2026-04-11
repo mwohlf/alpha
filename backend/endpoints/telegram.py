@@ -1,8 +1,7 @@
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from endpoints.deps import get_telegram_manager, verify_token
+from endpoints.auth import verify_token
+from endpoints.deps import get_telegram_manager
 from endpoints.models import (
     TelegramChatInfo,
     TelegramClearResponse,
@@ -25,12 +24,12 @@ async def get_telegram_status(telegram_manager=Depends(get_telegram_manager)) ->
     )
 
 
-@router.get("/telegram/messages", summary="Get recent Telegram messages", response_model=List[TelegramMessageResponse], operation_id="get_telegram_messages")
+@router.get("/telegram/messages", summary="Get recent Telegram messages", response_model=list[TelegramMessageResponse], operation_id="get_telegram_messages")
 async def get_telegram_messages(
     telegram_manager=Depends(get_telegram_manager),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of messages to return"),
-    chat_id: Optional[int] = Query(None, description="Filter by chat ID"),
-) -> List[TelegramMessageResponse]:
+    chat_id: int | None = Query(None, description="Filter by chat ID"),
+) -> list[TelegramMessageResponse]:
     try:
         messages = await get_recent_messages(limit=limit, chat_id=chat_id)
         return [_to_response(msg) for msg in messages]
@@ -46,20 +45,20 @@ async def clear_telegram_messages(telegram_manager=Depends(get_telegram_manager)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to clear messages: {str(e)}")
 
 
-@router.get("/telegram/users", summary="Get distinct users from stored messages", response_model=List[TelegramUserSummary], operation_id="get_telegram_users")
-async def get_telegram_users(telegram_manager=Depends(get_telegram_manager)) -> List[TelegramUserSummary]:
+@router.get("/telegram/users", summary="Get distinct users from stored messages", response_model=list[TelegramUserSummary], operation_id="get_telegram_users")
+async def get_telegram_users(telegram_manager=Depends(get_telegram_manager)) -> list[TelegramUserSummary]:
     try:
         return [TelegramUserSummary(**row) for row in await get_users()]
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve users: {str(e)}")
 
 
-@router.get("/telegram/users/{sender_id}/messages", summary="Get messages for a specific user", response_model=List[TelegramMessageResponse], operation_id="get_telegram_user_messages")
+@router.get("/telegram/users/{sender_id}/messages", summary="Get messages for a specific user", response_model=list[TelegramMessageResponse], operation_id="get_telegram_user_messages")
 async def get_telegram_user_messages(
     sender_id: int,
     telegram_manager=Depends(get_telegram_manager),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of messages to return"),
-) -> List[TelegramMessageResponse]:
+) -> list[TelegramMessageResponse]:
     try:
         messages = await get_messages_by_user(sender_id=sender_id, limit=limit)
         return [_to_response(msg) for msg in messages]

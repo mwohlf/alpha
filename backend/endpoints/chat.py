@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from endpoints.deps import get_ollama_manager, verify_token
+from endpoints.auth import verify_token
+from endpoints.deps import get_ollama_manager
 from endpoints.models import ChatRequest, ChatResponse
 from ollama.ollama_client import OllamaClientManager
 

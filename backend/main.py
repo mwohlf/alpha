@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
+from endpoints.models import HealthGetResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,7 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ollama.ollama_client import OllamaClientManager
 from config import settings
-from endpoints.router import router as api_router
+from endpoints.router import router as endpoints
 from telegram.message_store import init_db
 from telegram.client_manager import TelegramClientManager
 
@@ -150,7 +151,7 @@ async def lifespan(app: FastAPI):
 # --- App Setup ---
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
-app.include_router(api_router, prefix="/api")
+app.include_router(endpoints, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -174,14 +175,29 @@ class SPAStaticFiles(StaticFiles):
             raise
 
 
-app.mount("/app", SPAStaticFiles(directory=settings.FRONTEND_DIR, html=True), name="static")
+app.mount(
+    "/app", SPAStaticFiles(directory=settings.FRONTEND_DIR, html=True), name="static"
+)
 
 
-async def get_index():
+async def _get_index():
     index_path = os.path.join(settings.FRONTEND_DIR, "index.html")
     if not os.path.exists(index_path):
         raise HTTPException(status_code=404, detail="Frontend build not found.")
     return FileResponse(index_path)
+
+
+# --- additional endpoints
+
+
+@app.get(
+    "/api/health",
+    response_model=HealthGetResponse,
+    operation_id="get_health",
+    include_in_schema=False,
+)
+def get_health() -> HealthGetResponse:
+    return HealthGetResponse(status="healthy")
 
 
 @app.get("/", include_in_schema=False)
@@ -194,4 +210,4 @@ async def serve_index_file():
 async def catch_all(request: Request, skip_path: str):
     if "." in skip_path:  # Likely a missing asset file
         raise HTTPException(status_code=404)
-    return await get_index()
+    return await _get_index()

@@ -1,16 +1,11 @@
 from fastapi import APIRouter, Depends
 
-from endpoints.deps import get_ollama_manager, verify_token
-from endpoints.models import HealthGetResponse, ModelDeleteResponse, ModelListGetResponse, OllamaModel
+from endpoints.auth import verify_token
+from endpoints.deps import get_ollama_manager
+from endpoints.models import ModelDeleteResponse, ModelListGetResponse, OllamaModel
 from ollama.ollama_client import OllamaClientManager
 
 router = APIRouter()
-
-
-# this is probably for Kubernetes
-@router.get("/health", summary="Health check endpoint", tags=[], response_model=HealthGetResponse, operation_id="get_health")
-def get_health() -> HealthGetResponse:
-    return HealthGetResponse(status="healthy")
 
 
 @router.get("/model/list", summary="List locally available models", response_model=ModelListGetResponse, operation_id="get_model_list", dependencies=[Depends(verify_token)])

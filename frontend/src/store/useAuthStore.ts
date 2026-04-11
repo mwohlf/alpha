@@ -12,7 +12,6 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      // Initial state is just null; persist handles loading from localStorage
       token: null,
 
       login: async (username, password) => {
@@ -20,20 +19,16 @@ export const useAuthStore = create<AuthState>()(
           username,
           password,
         });
-
-        // No more manual localStorage.setItem!
-        // Just update the state and persist does the rest.
         set({ token: data.access_token });
       },
 
       logout: () => {
-        // No more manual localStorage.removeItem!
         set({ token: null });
       },
     }),
     {
-      name: "auth-storage", // Unique name for the item in localStorage
-      storage: createJSONStorage(() => localStorage), // Defaults to localStorage
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

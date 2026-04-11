@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 
 from endpoints.auth import verify_token
-from endpoints.deps import get_ollama_manager
-from endpoints.models import ChatRequest, ChatResponse
-from ollama.ollama_client import OllamaClientManager
+from endpoints.manager import get_ollama_manager
+from endpoints.data_models import ChatRequest, ChatResponse
+from ollama.ollama_client_manager import OllamaClientManager
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -14,6 +14,9 @@ async def chat_message(
     ollama: OllamaClientManager = Depends(get_ollama_manager),
     _token: str = Depends(verify_token),
 ) -> ChatResponse:
+    """
+    message interaction with the frontend
+    """
     messages = [{"role": m.role, "content": m.content} for m in body.history]
     messages.append({"role": "user", "content": body.message})
 

@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 
 from config import settings
-from endpoints.models import LoginRequest, TokenResponse
+from endpoints.data_models import LoginRequest, TokenResponse
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _security = HTTPBearer()

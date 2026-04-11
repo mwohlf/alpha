@@ -5,18 +5,18 @@ import sys
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
-from endpoints.models import HealthGetResponse
+from fastapi import FastAPI, HTTPException, Request, status
+from endpoints.data_models import HealthGetResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from ollama.ollama_client import OllamaClientManager
+from ollama.ollama_client_manager import OllamaClientManager
 from config import settings
-from endpoints.router import router as endpoints
+from endpoints.api_router import router as endpoints
 from telegram.message_store import init_db
-from telegram.client_manager import TelegramClientManager
+from telegram.telegram_client_manager import TelegramClientManager
 
 
 # --- Logging setup

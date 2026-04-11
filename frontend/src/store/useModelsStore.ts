@@ -47,9 +47,14 @@ export const useModelsStore = create<ModelsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await api.addModel({ name });
-      await get().fetchModels();
     } catch {
       set({ loading: false, error: "Failed to pull model." });
+      return;
+    }
+    try {
+      await get().fetchModels();
+    } catch {
+      set({ loading: false, error: "Failed to refresh model list." });
     }
   },
 }));

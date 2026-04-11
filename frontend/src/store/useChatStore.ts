@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { authAxios } from "../api";
+import { api } from "../api";
+import type { ChatMessage as ApiChatMessage } from "../generated/models";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -25,9 +26,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ history: [...history, userMessage], loading: true, error: null });
 
     try {
-      const { data } = await authAxios.post<{ reply: string }>("/api/chat/message", {
+      const { data } = await api.chatMessageApiChatMessagePost({
         message,
-        history,
+        history: history as ApiChatMessage[],
       });
       const assistantMessage: ChatMessage = { role: "assistant", content: data.reply };
       set((s) => ({ history: [...s.history, assistantMessage], loading: false }));

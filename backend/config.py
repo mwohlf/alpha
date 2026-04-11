@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     LOGFILE: str = os.getenv("LOGFILE", "log/alpha.log")
 
     # Frontend
-    FRONTEND_DIR: str = os.getenv("FRONTEND_DIR", "frontend/build")
+    FRONTEND_DIR: str = os.getenv("FRONTEND_DIR", "frontend/dist")
 
     # Server
     HOST: str = os.getenv("HOST", "127.0.0.1")

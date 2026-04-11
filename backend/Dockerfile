@@ -10,7 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /build
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     pkg-config \
     build-essential \
     gcc \
@@ -33,8 +34,8 @@ COPY backend/requirements.txt .
 
 # Use BuildKit cache to speed up pip installs
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --upgrade pip \
+    && pip install -r requirements.txt
 
 # ==========================================
 # Stage 2: The Runner (Final Production Image)
@@ -57,9 +58,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create user FIRST
-RUN adduser --disabled-password --gecos "" appuser && \
-    mkdir -p /app/etc /app/log && \
-    chown appuser:appuser /app /app/etc /app/log
+RUN adduser --disabled-password --gecos "" appuser \
+    && mkdir -p /app/etc /app/log \
+    && chown appuser:appuser /app /app/etc /app/log
 
 # TODO: copy this from the host, no need to re-install in the builder
 # Copy the venv from builder (avoids pip install in runner)

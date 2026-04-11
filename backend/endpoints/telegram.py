@@ -8,7 +8,6 @@ from endpoints.models import (
     TelegramClearResponse,
     TelegramMessageResponse,
     TelegramStatusResponse,
-    TelegramUserInfo,
     TelegramUserSummary,
 )
 from telegram.message_store import clear_messages, get_message_count, get_messages_by_user, get_recent_messages, get_users
@@ -55,14 +54,14 @@ async def get_telegram_users(telegram_manager=Depends(get_telegram_manager)) -> 
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve users: {str(e)}")
 
 
-@router.get("/telegram/users/{user_id}/messages", summary="Get messages for a specific user", response_model=List[TelegramMessageResponse], operation_id="get_telegram_user_messages")
+@router.get("/telegram/users/{sender_id}/messages", summary="Get messages for a specific user", response_model=List[TelegramMessageResponse], operation_id="get_telegram_user_messages")
 async def get_telegram_user_messages(
-    user_id: int,
+    sender_id: int,
     telegram_manager=Depends(get_telegram_manager),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of messages to return"),
 ) -> List[TelegramMessageResponse]:
     try:
-        messages = await get_messages_by_user(user_id=user_id, limit=limit)
+        messages = await get_messages_by_user(sender_id=sender_id, limit=limit)
         return [_to_response(msg) for msg in messages]
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve messages: {str(e)}")
@@ -73,13 +72,14 @@ def _to_response(msg) -> TelegramMessageResponse:
         id=msg.id,
         message_id=msg.message_id,
         chat=TelegramChatInfo(chat_id=msg.chat_id, chat_type=msg.chat_type, title=msg.chat_title),
-        user=TelegramUserInfo(user_id=msg.user_id, username=msg.username, first_name=msg.first_name, last_name=msg.last_name)
-        if msg.user_id
-        else None,
+        sender_id=msg.sender_id,
+        receiver_id=msg.receiver_id,
+        username=msg.username,
+        first_name=msg.first_name,
+        last_name=msg.last_name,
         text=msg.text,
         message_type=msg.message_type,
         date=msg.date,
         reply_to_message_id=msg.reply_to_message_id,
-        outgoing=bool(msg.outgoing),
         created_at=msg.created_at,
     )

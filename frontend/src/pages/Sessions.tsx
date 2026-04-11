@@ -10,7 +10,7 @@ function displayName(user: { username?: string | null; first_name?: string | nul
 }
 
 export default function Sessions() {
-  const { users, selectedUserId, messages, loadingUsers, loadingMessages, error, fetchUsers, selectUser } =
+  const { users, selectedSenderId, messages, loadingUsers, loadingMessages, error, fetchUsers, selectUser } =
     useSessionsStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -31,9 +31,9 @@ export default function Sessions() {
         <ul>
           {users.map((user) => (
             <li
-              key={user.user_id}
-              className={user.user_id === selectedUserId ? "active" : ""}
-              onClick={() => selectUser(user.user_id)}
+              key={user.sender_id}
+              className={user.sender_id === selectedSenderId ? "active" : ""}
+              onClick={() => selectUser(user.sender_id)}
             >
               <span className="sessions-user-name">{displayName(user)}</span>
               <span className="sessions-user-count">{user.message_count}</span>
@@ -45,13 +45,13 @@ export default function Sessions() {
       <div className="sessions-detail">
         <div className="sessions-messages">
           {loadingMessages && <p className="sessions-status">Loading...</p>}
-          {!selectedUserId && !loadingMessages && (
+          {!selectedSenderId && !loadingMessages && (
             <p className="sessions-status">Select a user to view messages.</p>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className={`sessions-bubble-row ${msg.outgoing ? "outgoing" : "incoming"}`}>
+            <div key={msg.id} className={`sessions-bubble-row ${msg.sender_id === null ? "outgoing" : "incoming"}`}>
               <div className="sessions-bubble">
-                {!msg.outgoing && (
+                {msg.sender_id !== null && (
                   <span className="sessions-bubble-chat">{msg.chat.title ?? `Chat ${msg.chat.chat_id}`}</span>
                 )}
                 <p className="sessions-bubble-text">{msg.text ?? <em>non-text message</em>}</p>

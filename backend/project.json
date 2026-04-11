@@ -26,13 +26,17 @@
     "generate_ollama_client": {
       "executor": "nx:run-commands",
       "dependsOn": ["generate_venv"],
-      "outputs": ["{projectRoot}/ollama/generated"],
+      "inputs": [
+        "{workspaceRoot}/etc/ollama-service.yaml",
+        "{workspaceRoot}/etc/ollama-client.config"
+      ],
+      "outputs": ["{projectRoot}/ollama/client"],
       "options": {
         "commands": [
           "./backend/.venv/bin/openapi-python-client generate --path etc/ollama-service.yaml --output-path backend/ollama/client --overwrite --config ./etc/ollama-client.config",
           "shx rm -rf {projectRoot}/ollama/client/.gitignore",
           "shx rm -rf {projectRoot}/ollama/client/pyproject.toml",
-          "shx rm -rf {projectRoot}/ollama/client/REAMDE.md"
+          "shx rm -rf {projectRoot}/ollama/client/README.md"
         ],
         "parallel": false,
         "cwd": "{workspaceRoot}"
@@ -41,9 +45,13 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": ["generate_venv", "generate_ollama_client"],
-      "outputs": ["{projectRoot}/__pycache__"],
+      "outputs": ["{projectRoot}/.build-stamp"],
       "options": {
-        "command": "./.venv/bin/python -m compileall .",
+        "commands": [
+          "./.venv/bin/python -m compileall .",
+          "shx touch .build-stamp"
+        ],
+        "parallel": false,
         "cwd": "{projectRoot}"
       }
     },
@@ -87,6 +95,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "outputs": ["{workspaceRoot}/coverage/backend"],
       "options": {
         "command": "pytest",
@@ -95,6 +104,7 @@
     },
     "lint": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate_venv"],
       "options": {
         "command": "./.venv/bin/ruff check --config ../etc/ruff.toml .",
         "cwd": "{projectRoot}"
@@ -109,6 +119,7 @@
     },
     "format": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate_venv"],
       "options": {
         "command": "./.venv/bin/ruff format --config ../etc/ruff.toml .",
         "cwd": "{projectRoot}"

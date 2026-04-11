@@ -26,14 +26,15 @@ rm -rf \
   node_modules \
   package-lock.json \
   dist \
+  log/*.log \
+  etc/alpha-service.yaml \
   backend/.venv \
   backend/.ruff_cache \
   backend/__pycache__ \
   backend/ollama/client \
   frontend/dist \
   frontend/node_modules \
-  frontend/src/generated \
-  etc/alpha-service.yaml
+  frontend/src/generated
 
 npm install
 ```

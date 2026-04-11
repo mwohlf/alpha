@@ -44,15 +44,6 @@ class ProtectedGetResponse401(BaseModel):
     detail: Optional[str] = Field(None, examples=["Invalid authentication credentials"])
 
 
-class TelegramUserInfo(BaseModel):
-    """User information from a Telegram message."""
-
-    user_id: Optional[int] = None
-    username: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-
-
 class TelegramChatInfo(BaseModel):
     """Chat information from a Telegram message."""
 
@@ -67,12 +58,15 @@ class TelegramMessageResponse(BaseModel):
     id: int
     message_id: int
     chat: TelegramChatInfo
-    user: Optional[TelegramUserInfo] = None
+    sender_id: Optional[int] = None
+    receiver_id: Optional[int] = None
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     text: Optional[str] = None
     message_type: str
     date: datetime
     reply_to_message_id: Optional[int] = None
-    outgoing: bool = False
     created_at: datetime
 
     class Config:
@@ -106,9 +100,9 @@ class TokenResponse(BaseModel):
 
 
 class TelegramUserSummary(BaseModel):
-    """A distinct user seen in stored Telegram messages."""
+    """A distinct sender seen in stored Telegram messages."""
 
-    user_id: int
+    sender_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None

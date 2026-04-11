@@ -8,7 +8,6 @@ from typing import List, Optional
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
     Column,
     DateTime,
     Index,
@@ -16,7 +15,6 @@ from sqlalchemy import (
     String,
     Text,
     delete,
-    distinct,
     func,
     select,
 )
@@ -38,7 +36,8 @@ class TelegramMessage(Base):
     chat_id = Column(BigInteger, nullable=False)
     chat_title = Column(String(255), nullable=True)
     chat_type = Column(String(50), nullable=False)
-    user_id = Column(BigInteger, nullable=True)
+    sender_id = Column(BigInteger, nullable=True)
+    receiver_id = Column(BigInteger, nullable=True)
     username = Column(String(255), nullable=True)
     first_name = Column(String(255), nullable=True)
     last_name = Column(String(255), nullable=True)
@@ -46,7 +45,6 @@ class TelegramMessage(Base):
     message_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     reply_to_message_id = Column(BigInteger, nullable=True)
-    outgoing = Column(Boolean, nullable=False, default=False, server_default="0")
     created_at = Column(
         DateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )
@@ -55,7 +53,8 @@ class TelegramMessage(Base):
     __table_args__ = (
         Index("idx_chat_id", "chat_id"),
         Index("idx_date", "date"),
-        Index("idx_user_id", "user_id"),
+        Index("idx_sender_id", "sender_id"),
+        Index("idx_receiver_id", "receiver_id"),
     )
 
 
@@ -168,21 +167,21 @@ async def get_message_count() -> int:
 
 async def get_users() -> List[dict]:
     """
-    Return distinct users with their message counts.
+    Return distinct senders with their incoming message counts.
     """
     async with get_db_session() as session:
         try:
             query = (
                 select(
-                    TelegramMessage.user_id,
+                    TelegramMessage.sender_id,
                     TelegramMessage.username,
                     TelegramMessage.first_name,
                     TelegramMessage.last_name,
                     func.count(TelegramMessage.id).label("message_count"),
                 )
-                .where(TelegramMessage.user_id.isnot(None))
+                .where(TelegramMessage.sender_id.isnot(None))
                 .group_by(
-                    TelegramMessage.user_id,
+                    TelegramMessage.sender_id,
                     TelegramMessage.username,
                     TelegramMessage.first_name,
                     TelegramMessage.last_name,
@@ -196,15 +195,15 @@ async def get_users() -> List[dict]:
             raise
 
 
-async def get_messages_by_user(user_id: int, limit: int = 100) -> List[TelegramMessage]:
+async def get_messages_by_user(sender_id: int, limit: int = 100) -> List[TelegramMessage]:
     """
-    Return all messages in chats where the user has participated (both directions).
+    Return all messages in chats where the sender has participated (both directions).
     """
     async with get_db_session() as session:
         try:
             chats_subquery = (
                 select(TelegramMessage.chat_id)
-                .where(TelegramMessage.user_id == user_id)
+                .where(TelegramMessage.sender_id == sender_id)
                 .distinct()
                 .scalar_subquery()
             )
@@ -217,7 +216,7 @@ async def get_messages_by_user(user_id: int, limit: int = 100) -> List[TelegramM
             result = await session.execute(query)
             return list(result.scalars().all())
         except Exception as e:
-            logger.error(f"Failed to query messages for user {user_id}: {e}", exc_info=True)
+            logger.error(f"Failed to query messages for sender {sender_id}: {e}", exc_info=True)
             raise
 
 

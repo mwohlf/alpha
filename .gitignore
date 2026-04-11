@@ -10,6 +10,7 @@
 **/*.pyo
 
 backend/.venv
+backend/.build-stamp
 backend/.ruff_cache
 backend/ollama/client/
 backend/*.db

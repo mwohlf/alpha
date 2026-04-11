@@ -18,21 +18,21 @@
       }
     },
     "build": {
+      "description": "this runs in {workspaceRoot}, start the UI and sets up a proxy for the api endpoints",
       "executor": "@nx/vite:build",
       "dependsOn": ["generate"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "{projectRoot}/dist",
-        "configFile": "{projectRoot}/vite.config.ts",
-        "cwd": "{workspaceRoot}"
+        "configFile": "{projectRoot}/vite.config.ts"
       }
     },
     "serve": {
+      "description": "this runs in {workspaceRoot}, we need a alpha-service.yaml file to work",
       "executor": "@nx/vite:dev-server",
       "dependsOn": ["generate"],
       "options": {
-        "buildTarget": "frontend:build",
-        "cwd": "{workspaceRoot}"
+        "buildTarget": "frontend:build"
       }
     }
   }

@@ -4,18 +4,18 @@ import type { TelegramMessageResponse, TelegramUserSummary } from "../generated/
 
 interface SessionsState {
   users: TelegramUserSummary[];
-  selectedUserId: number | null;
+  selectedSenderId: number | null;
   messages: TelegramMessageResponse[];
   loadingUsers: boolean;
   loadingMessages: boolean;
   error: string | null;
   fetchUsers: () => Promise<void>;
-  selectUser: (userId: number) => Promise<void>;
+  selectUser: (senderId: number) => Promise<void>;
 }
 
 export const useSessionsStore = create<SessionsState>((set) => ({
   users: [],
-  selectedUserId: null,
+  selectedSenderId: null,
   messages: [],
   loadingUsers: false,
   loadingMessages: false,
@@ -32,10 +32,10 @@ export const useSessionsStore = create<SessionsState>((set) => ({
     }
   },
 
-  selectUser: async (userId: number) => {
-    set({ selectedUserId: userId, loadingMessages: true, error: null });
+  selectUser: async (senderId: number) => {
+    set({ selectedSenderId: senderId, loadingMessages: true, error: null });
     try {
-      const { data } = await api.getTelegramUserMessages(userId);
+      const { data } = await api.getTelegramUserMessages(senderId);
       set({ messages: data, loadingMessages: false });
     } catch (err) {
       set({ loadingMessages: false, error: "Failed to load messages" });

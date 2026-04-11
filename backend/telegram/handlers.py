@@ -91,7 +91,8 @@ async def _process_with_ollama(client: Client, message: Message, text: str) -> N
                     "chat_id": sent.chat.id,
                     "chat_title": getattr(sent.chat, "title", None) or getattr(sent.chat, "first_name", "Private Chat"),
                     "chat_type": sent.chat.type.value if sent.chat.type else "unknown",
-                    "user_id": None,
+                    "sender_id": None,
+                    "receiver_id": sent.chat.id,
                     "username": None,
                     "first_name": None,
                     "last_name": None,
@@ -99,7 +100,6 @@ async def _process_with_ollama(client: Client, message: Message, text: str) -> N
                     "message_type": "text",
                     "date": sent.date if sent.date else datetime.utcnow(),
                     "reply_to_message_id": message.id,
-                    "outgoing": True,
                 })
             else:
                 logger.warning("Ollama returned empty response")
@@ -160,7 +160,8 @@ async def handle_new_message(client: Client, message: Message) -> None:
             "chat_title": getattr(message.chat, "title", None)
             or getattr(message.chat, "first_name", "Private Chat"),
             "chat_type": message.chat.type.value if message.chat.type else "unknown",
-            "user_id": message.from_user.id if message.from_user else None,
+            "sender_id": message.from_user.id if message.from_user and not message.outgoing else None,
+            "receiver_id": message.chat.id if message.outgoing else None,
             "username": message.from_user.username if message.from_user else None,
             "first_name": message.from_user.first_name if message.from_user else None,
             "last_name": message.from_user.last_name if message.from_user else None,
@@ -170,7 +171,6 @@ async def handle_new_message(client: Client, message: Message) -> None:
             "reply_to_message_id": message.reply_to_message.id
             if message.reply_to_message
             else None,
-            "outgoing": bool(message.outgoing),
         }
 
         # Store in database

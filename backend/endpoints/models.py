@@ -6,42 +6,39 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class Model(BaseModel):
-    """Represents a specific AI model configuration."""
+class HealthGetResponse(BaseModel):
+    status: Optional[str] = Field(None, examples=["healthy"])
 
-    unique_id: str = Field(
-        ...,
-        alias="uniqueId",  # Maps camelCase from JSON to snake_case in Python
-        examples=["llama3:latest"],
-        description="The unique identifier for the model",
-    )
-    description: str = Field(..., examples=["Meta Llama 3 8B model"], description="A brief description of the model capabilities")
 
-    class Config:
-        # This allows the API to accept 'uniqueId' but let you use 'unique_id' in Python
-        populate_by_name = True
+class ModelDetails(BaseModel):
+    """Details about an Ollama model's format and family."""
+
+    format: Optional[str] = None
+    family: Optional[str] = None
+    families: Optional[list[str]] = None
+    parameter_size: Optional[str] = None
+    quantization_level: Optional[str] = None
+
+
+class OllamaModel(BaseModel):
+    """A locally available Ollama model."""
+
+    name: str
+    model: Optional[str] = None
+    modified_at: Optional[str] = None
+    size: Optional[int] = None
+    digest: Optional[str] = None
+    details: Optional[ModelDetails] = None
 
 
 class ModelListGetResponse(BaseModel):
     """Response containing a collection of available models."""
 
-    models: list[Model] = Field(default_factory=list, description="A list of available AI models")
+    models: list[OllamaModel] = Field(default_factory=list)
 
 
-class HealthGetResponse(BaseModel):
-    status: Optional[str] = Field(None, examples=["healthy"])
-
-
-class HelloGetResponse(BaseModel):
-    message: str = Field(..., examples=["Hello from FastAPI"])
-
-
-class ProtectedGetResponse(BaseModel):
-    message: Optional[str] = Field(None, examples=["This is a protected endpoint"])
-
-
-class ProtectedGetResponse401(BaseModel):
-    detail: Optional[str] = Field(None, examples=["Invalid authentication credentials"])
+class ModelDeleteResponse(BaseModel):
+    deleted: str
 
 
 class TelegramChatInfo(BaseModel):
@@ -109,4 +106,23 @@ class TelegramUserSummary(BaseModel):
     message_count: int
 
 
-ModelListGetResponse.model_rebuild()
+class ChatMessage(BaseModel):
+    """A single message in a chat conversation."""
+
+    role: str = Field(..., examples=["user"], description="Either 'user' or 'assistant'")
+    content: str = Field(..., examples=["Hello!"])
+
+
+class ChatRequest(BaseModel):
+    """Request to send a message to the Ollama backend."""
+
+    message: str = Field(..., examples=["What is the meaning of life?"])
+    history: list[ChatMessage] = Field(default_factory=list, description="Prior conversation turns")
+
+
+class ChatResponse(BaseModel):
+    """Response from the Ollama backend."""
+
+    reply: str = Field(..., examples=["42."])
+
+

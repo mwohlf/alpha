@@ -80,8 +80,9 @@ async def init_db(database_url: str) -> None:
         expire_on_commit=False,
     )
 
-    # Create tables
+    # Drop and recreate tables to ensure schema is always up to date
     async with _engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     logger.info("Telegram database initialized successfully")

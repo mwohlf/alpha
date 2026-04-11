@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { authAxios } from "../api";
 import type { TokenResponse } from "../generated/models";
 
@@ -8,17 +9,34 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem("access_token"),
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      // Initial state is just null; persist handles loading from localStorage
+      token: null,
 
-  login: async (username, password) => {
-    const { data } = await authAxios.post<TokenResponse>("/api/auth/login", { username, password });
-    localStorage.setItem("access_token", data.access_token);
-    set({ token: data.access_token });
-  },
+      login: async (username, password) => {
+        const { data } = await authAxios.post<TokenResponse>(
+          "/api/auth/login",
+          {
+            username,
+            password,
+          },
+        );
 
-  logout: () => {
-    localStorage.removeItem("access_token");
-    set({ token: null });
-  },
-}));
+        // No more manual localStorage.setItem!
+        // Just update the state and persist does the rest.
+        set({ token: data.access_token });
+      },
+
+      logout: () => {
+        // No more manual localStorage.removeItem!
+        set({ token: null });
+      },
+    }),
+    {
+      name: "auth-storage", // Unique name for the item in localStorage
+      storage: createJSONStorage(() => localStorage), // Defaults to localStorage
+    },
+  ),
+);

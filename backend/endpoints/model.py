@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from endpoints.deps import get_ollama_manager, verify_token
-from endpoints.models import HealthGetResponse, HelloGetResponse, Model, ModelListGetResponse, ProtectedGetResponse
+from endpoints.models import HealthGetResponse, ModelDeleteResponse, ModelListGetResponse, OllamaModel
+from ollama.ollama_client import OllamaClientManager
 
 router = APIRouter()
 
@@ -12,30 +13,21 @@ def get_health() -> HealthGetResponse:
     return HealthGetResponse(status="healthy")
 
 
-@router.get("/hello", summary="Returns a hello message", tags=[], response_model=HelloGetResponse, operation_id="get_hello")
-def get_hello() -> HelloGetResponse:
-    return HelloGetResponse(message="Hello from FastAPI")
+@router.get("/model/list", summary="List locally available models", response_model=ModelListGetResponse, operation_id="get_model_list", dependencies=[Depends(verify_token)])
+async def get_model_list(ollama: OllamaClientManager = Depends(get_ollama_manager)) -> ModelListGetResponse:
+    models_data = await ollama.list_models()
+    return ModelListGetResponse(models=[OllamaModel(**m) for m in models_data])
 
 
-@router.get("/protected", summary="Protected endpoint requiring JWT token", tags=[], response_model=ProtectedGetResponse, operation_id="get_protected", dependencies=[Depends(verify_token)])
-def get_protected() -> ProtectedGetResponse:
-    return ProtectedGetResponse(message="This is a protected endpoint")
+@router.delete("/model/delete/{name}", summary="Delete a local model", response_model=ModelDeleteResponse, operation_id="delete_model", dependencies=[Depends(verify_token)])
+async def delete_model(name: str, ollama: OllamaClientManager = Depends(get_ollama_manager)) -> ModelDeleteResponse:
+    await ollama.delete_model(name)
+    return ModelDeleteResponse(deleted=name)
 
 
-@router.get("/model/list", summary="Get all models", response_model=ModelListGetResponse, operation_id="get_model_list")
-def get_model_list(ollamaManager=Depends(get_ollama_manager)):
-    # Example logic: replace with your actual database/state call
-    return ModelListGetResponse(models=[Model(uniqueId="llama3", description="Meta Llama 3")])
-
-
-@router.delete("/model/delete/{id}", summary="Delete a model", response_model=HelloGetResponse, operation_id="delete_model")
-def delete_model(id: str, ollamaManager=Depends(get_ollama_manager)):
-    # ollamaManager.
-    return None
-
-
-@router.post("/model/add", summary="Download and add a new model", response_model=Model, operation_id="add_model")
-def add_model(unique_id: str, ollamaManager=Depends(get_ollama_manager)):
-    # Logic to save model...
-    model = {unique_id: unique_id}
-    return model
+@router.post("/model/add", summary="Pull and add a model from the Ollama registry", response_model=OllamaModel, operation_id="add_model", dependencies=[Depends(verify_token)])
+async def add_model(name: str, ollama: OllamaClientManager = Depends(get_ollama_manager)) -> OllamaModel:
+    await ollama.pull_model(name)
+    models_data = await ollama.list_models()
+    model = next((m for m in models_data if m.get("name") == name), None)
+    return OllamaModel(**(model or {"name": name}))

@@ -123,6 +123,50 @@ class OllamaClientManager:
             logger.error(f"Error listing models: {e}", exc_info=True)
             raise RuntimeError(f"Failed to list models: {e}")
 
+    async def delete_model(self, name: str) -> None:
+        """
+        Delete a locally available model.
+
+        Args:
+            name: Model name to delete (e.g. "llama3:latest")
+
+        Raises:
+            RuntimeError: If client is not running or request fails
+        """
+        if not self._running or not self._client:
+            raise RuntimeError("Ollama client is not running")
+
+        try:
+            response = await self._client.request("DELETE", "/api/delete", json={"name": name})
+            response.raise_for_status()
+        except Exception as e:
+            logger.error(f"Error deleting model {name}: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to delete model: {e}")
+
+    async def pull_model(self, name: str) -> None:
+        """
+        Pull a model from the Ollama registry (non-streaming).
+
+        Args:
+            name: Model name to pull (e.g. "llama3:latest")
+
+        Raises:
+            RuntimeError: If client is not running or request fails
+        """
+        if not self._running or not self._client:
+            raise RuntimeError("Ollama client is not running")
+
+        try:
+            response = await self._client.post(
+                "/api/pull",
+                json={"name": name, "stream": False},
+                timeout=600.0,
+            )
+            response.raise_for_status()
+        except Exception as e:
+            logger.error(f"Error pulling model {name}: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to pull model: {e}")
+
     async def chat(
         self,
         messages: List[Dict[str, str]],

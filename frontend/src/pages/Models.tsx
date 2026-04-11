@@ -1,3 +1,121 @@
+import { useEffect, useState } from "react";
+import { useModelsStore } from "../store/useModelsStore";
+import "./Models.css";
+
+function formatSize(bytes?: number | null): string {
+  if (!bytes) return "—";
+  const gb = bytes / 1e9;
+  return gb >= 1 ? `${gb.toFixed(1)} GB` : `${(bytes / 1e6).toFixed(0)} MB`;
+}
+
 export default function Models() {
-  return <h1>Models</h1>;
+  const { models, selected, loading, error, fetchModels, selectModel, deleteModel, addModel } = useModelsStore();
+  const [addName, setAddName] = useState("");
+  const [pulling, setPulling] = useState(false);
+
+  useEffect(() => {
+    fetchModels();
+  }, [fetchModels]);
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const name = addName.trim();
+    if (!name) return;
+    setPulling(true);
+    await addModel(name);
+    setAddName("");
+    setPulling(false);
+  }
+
+  return (
+    <div className="models">
+      <div className="models-master">
+        <div className="models-master-header">
+          <h2>Models</h2>
+        </div>
+        <form className="models-add-form" onSubmit={handleAdd}>
+          <input
+            className="models-add-input"
+            type="text"
+            placeholder="Pull model…"
+            value={addName}
+            onChange={(e) => setAddName(e.target.value)}
+            disabled={pulling || loading}
+          />
+          <button className="models-add-btn" type="submit" disabled={!addName.trim() || pulling || loading}>
+            {pulling ? "…" : "Pull"}
+          </button>
+        </form>
+        {error && <p className="models-error">{error}</p>}
+        <ul className="models-list">
+          {loading && models.length === 0 && (
+            <li className="models-status">Loading…</li>
+          )}
+          {models.map((model) => (
+            <li
+              key={model.name}
+              className={model.name === selected?.name ? "active" : ""}
+              onClick={() => selectModel(model)}
+            >
+              <span className="models-item-name">{model.name}</span>
+              {model.details?.parameter_size && (
+                <span className="models-item-badge">{model.details.parameter_size}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="models-detail">
+        {!selected ? (
+          <p className="models-status">Select a model to view details.</p>
+        ) : (
+          <div className="models-detail-content">
+            <div className="models-detail-header">
+              <h2>{selected.name}</h2>
+              <button
+                className="models-delete-btn"
+                onClick={() => deleteModel(selected.name)}
+                disabled={loading}
+              >
+                Delete
+              </button>
+            </div>
+            <table className="models-detail-table">
+              <tbody>
+                <tr>
+                  <td>Size</td>
+                  <td>{formatSize(selected.size)}</td>
+                </tr>
+                {selected.details?.family && (
+                  <tr><td>Family</td><td>{selected.details.family}</td></tr>
+                )}
+                {selected.details?.parameter_size && (
+                  <tr><td>Parameters</td><td>{selected.details.parameter_size}</td></tr>
+                )}
+                {selected.details?.quantization_level && (
+                  <tr><td>Quantization</td><td>{selected.details.quantization_level}</td></tr>
+                )}
+                {selected.details?.format && (
+                  <tr><td>Format</td><td>{selected.details.format}</td></tr>
+                )}
+                {selected.modified_at && (
+                  <tr>
+                    <td>Modified</td>
+                    <td>{new Date(selected.modified_at).toLocaleString()}</td>
+                  </tr>
+                )}
+                {selected.digest && (
+                  <tr>
+                    <td>Digest</td>
+                    <td className="models-digest">{selected.digest.slice(0, 24)}…</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

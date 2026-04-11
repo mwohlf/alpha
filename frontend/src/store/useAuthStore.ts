@@ -1,6 +1,6 @@
+import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { authAxios } from "../api";
 import type { TokenResponse } from "../generated/models";
 
 interface AuthState {
@@ -16,13 +16,10 @@ export const useAuthStore = create<AuthState>()(
       token: null,
 
       login: async (username, password) => {
-        const { data } = await authAxios.post<TokenResponse>(
-          "/api/auth/login",
-          {
-            username,
-            password,
-          },
-        );
+        const { data } = await axios.post<TokenResponse>("/api/auth/login", {
+          username,
+          password,
+        });
 
         // No more manual localStorage.setItem!
         // Just update the state and persist does the rest.

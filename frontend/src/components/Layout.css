@@ -76,8 +76,7 @@
 
 .content {
   flex: 1;
-  padding: 32px;
-  overflow-y: auto;
+  overflow: hidden;
   background-color: #282c34;
   color: #abb2bf;
 }

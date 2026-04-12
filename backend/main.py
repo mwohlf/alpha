@@ -29,7 +29,7 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(levelname)s: %(message)s",
+    format="%(asctime)s %(levelname)s: %(message)s",
     handlers=[file_handler, stdout_handler],
 )
 logger = logging.getLogger("alpha")
@@ -105,42 +105,18 @@ async def stop_telegram(app: FastAPI):
         logger.info("Telegram stopped")
 
 
-def update_app_config(app: FastAPI, **kwargs):
-    """Callback to update dynamic configuration parameters."""
-    # We store these in a dict in app state so endpoints can see the 'current' effective config
-    if not hasattr(app.state, "dynamic_config"):
-        app.state.dynamic_config = {}
-
-    app.state.dynamic_config.update(kwargs)
-    logger.info(f"Config updated: {kwargs}")
-
-
 # --- Lifespan Manager ---
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize Persistent Storage
+    logger.info("Startup begin")
     await init_db(settings.TELEGRAM_DATABASE_URL)
-
-    # Set initial config parameters
-    update_app_config(
-        app,
-        ollama_model=settings.OLLAMA_DEFAULT_MODEL,
-        ollama_url=settings.OLLAMA_BASE_URL,
-        enabled_features=["telegram" if settings.TELEGRAM_API_ID else None],
-    )
-
-    # Initial Startups based on settings
-    if settings.OLLAMA_ENABLED:
-        await start_ollama(app, settings.OLLAMA_BASE_URL, settings.OLLAMA_DEFAULT_MODEL)
-
-    if settings.TELEGRAM_API_ID:
-        await start_telegram(app)
+    await start_ollama(app, settings.OLLAMA_BASE_URL, settings.OLLAMA_DEFAULT_MODEL)
+    await start_telegram(app)
 
     yield
 
-    # Graceful Shutdown
     await stop_telegram(app)
     await stop_ollama(app)
     logger.info("Shutdown complete")

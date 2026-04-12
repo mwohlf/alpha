@@ -46,7 +46,7 @@ docker run -p 8000:8000 alpha-app
 ### Clean
 ```bash
 rm -rf .nx/cache .nx/installation .nx/workspace-data node_modules package-lock.json dist \
-  backend/.venv backend/.ruff_cache backend/__pycache__ backend/ollama/client \
+  log/*.log backend/.venv backend/.ruff_cache backend/__pycache__ backend/ollama/client \
   frontend/dist frontend/node_modules frontend/src/generated etc/alpha-service.yaml
 npm install
 ```

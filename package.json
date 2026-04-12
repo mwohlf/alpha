@@ -40,6 +40,9 @@
     "vite": "^7.0.0",
     "vitest": "~4.0.8"
   },
+  "overrides": {
+    "glob": "^13.0.6"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mwohlf/alpha.git"

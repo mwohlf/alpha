@@ -22,4 +22,23 @@
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
 
+  // Status bar task buttons (spmeesseman.vscode-taskbuttons)
+  "VsCodeTaskButtons.tasks": [
+    {
+      "label": "$(trash) clean",
+      "task": "clean",
+      "tooltip": "Clean all build artifacts and reinstall npm"
+    },
+    {
+      "label": "$(package) build",
+      "task": "build",
+      "tooltip": "Build backend (./nx build backend)"
+    },
+    {
+      "label": "$(play) run",
+      "task": "run",
+      "tooltip": "Serve backend (./nx serve backend)"
+    }
+  ]
+
 }

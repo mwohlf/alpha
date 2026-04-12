@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf .nx/cache .nx/installation .nx/workspace-data node_modules package-lock.json dist log/*.log etc/alpha-service.yaml backend/.venv backend/.ruff_cache backend/__pycache__ backend/ollama/client frontend/dist frontend/node_modules frontend/src/generated && npm install",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "./nx build backend",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "./nx serve backend",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

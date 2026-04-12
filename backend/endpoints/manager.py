@@ -7,12 +7,18 @@ from telegram.telegram_client_manager import TelegramClientManager
 def get_ollama_manager(request: Request) -> OllamaClientManager:
     manager = getattr(request.app.state, "ollama_manager", None)
     if not manager:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Ollama client not initialized.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Ollama client not initialized.",
+        )
     return manager
 
 
 def get_telegram_manager(request: Request) -> TelegramClientManager:
     manager = getattr(request.app.state, "telegram_manager", None)
     if not manager:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Telegram client not initialized.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram client not initialized.",
+        )
     return manager

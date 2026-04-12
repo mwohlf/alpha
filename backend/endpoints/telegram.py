@@ -17,7 +17,9 @@ from telegram.message_store import (
     get_users,
 )
 
-router = APIRouter(tags=["telegram"], dependencies=[Depends(verify_token)])
+router = APIRouter(
+    prefix="/telegram", tags=["telegram"], dependencies=[Depends(verify_token)]
+)
 
 
 def _to_response(msg) -> TelegramMessageResponse:
@@ -41,7 +43,7 @@ def _to_response(msg) -> TelegramMessageResponse:
 
 
 @router.get(
-    "/telegram/status",
+    "/status",
     summary="Get Telegram client status",
     response_model=TelegramStatusResponse,
     operation_id="get_telegram_status",
@@ -58,7 +60,7 @@ async def get_telegram_status(
 
 
 @router.get(
-    "/telegram/messages",
+    "/messages",
     summary="Get recent Telegram messages",
     response_model=list[TelegramMessageResponse],
     operation_id="get_telegram_messages",
@@ -81,7 +83,7 @@ async def get_telegram_messages(
 
 
 @router.delete(
-    "/telegram/messages",
+    "/messages",
     summary="Clear all Telegram messages",
     response_model=TelegramClearResponse,
     operation_id="clear_telegram_messages",
@@ -101,7 +103,7 @@ async def clear_telegram_messages(
 
 
 @router.get(
-    "/telegram/users",
+    "/users",
     summary="Get distinct users from stored messages",
     response_model=list[TelegramUserSummary],
     operation_id="get_telegram_users",
@@ -119,7 +121,7 @@ async def get_telegram_users(
 
 
 @router.get(
-    "/telegram/users/{sender_id}/messages",
+    "/users/{sender_id}/messages",
     summary="Get messages for a specific user",
     response_model=list[TelegramMessageResponse],
     operation_id="get_telegram_user_messages",

@@ -5,14 +5,12 @@ from endpoints.manager import get_ollama_manager
 from endpoints.data_models import ChatRequest, ChatResponse
 from ollama.ollama_client_manager import OllamaClientManager
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/chat", tags=["chat"], dependencies=[Depends(verify_token)])
 
 
 @router.post("/message", response_model=ChatResponse)
 async def chat_message(
-    body: ChatRequest,
-    ollama: OllamaClientManager = Depends(get_ollama_manager),
-    _token: str = Depends(verify_token),
+    body: ChatRequest, ollama: OllamaClientManager = Depends(get_ollama_manager)
 ) -> ChatResponse:
     """
     message interaction with the frontend

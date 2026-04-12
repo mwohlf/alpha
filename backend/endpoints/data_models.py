@@ -109,7 +109,9 @@ class TelegramUserSummary(BaseModel):
 class ChatMessage(BaseModel):
     """A single message in a chat conversation."""
 
-    role: str = Field(..., examples=["user"], description="Either 'user' or 'assistant'")
+    role: str = Field(
+        ..., examples=["user"], description="Either 'user' or 'assistant'"
+    )
     content: str = Field(..., examples=["Hello!"])
 
 
@@ -117,12 +119,12 @@ class ChatRequest(BaseModel):
     """Request to send a message to the Ollama backend."""
 
     message: str = Field(..., examples=["What is the meaning of life?"])
-    history: list[ChatMessage] = Field(default_factory=list, description="Prior conversation turns")
+    history: list[ChatMessage] = Field(
+        default_factory=list, description="Prior conversation turns"
+    )
 
 
 class ChatResponse(BaseModel):
     """Response from the Ollama backend."""
 
     reply: str = Field(..., examples=["42."])
-
-

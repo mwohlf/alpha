@@ -14,9 +14,11 @@ import { useAuthStore } from "./store/useAuthStore";
 import Layout from "./components/Layout";
 
 function RequireAuth() {
-  const isAuthenticated = useAuthStore((s) => !!s.token);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = !!token;
   // Get the hydration status from Zustand
   const hasHydrated = useAuthStore.persist.hasHydrated();
+  console.log("[RequireAuth]", { hasHydrated, isAuthenticated, token });
   // If we haven't checked localStorage yet, show nothing (or a spinner)
   if (!hasHydrated) {
     return <div>Loading...</div>; // Or return null

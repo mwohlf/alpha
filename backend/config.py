@@ -32,13 +32,6 @@ class Settings(BaseSettings):
     LOGIN_USERNAME: str = "admin"
     LOGIN_PASSWORD: str = "admin"
 
-    @field_validator("SECRET_KEY")
-    @classmethod
-    def secret_key_must_be_set(cls, v: str) -> str:
-        if not v:
-            raise ValueError("SECRET_KEY must be set in the environment or .env file")
-        return v
-
     # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

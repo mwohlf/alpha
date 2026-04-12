@@ -120,8 +120,6 @@ def update_app_config(app: FastAPI, **kwargs):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"Starting application in {settings.ENVIRONMENT} mode")
-
     # Initialize Persistent Storage
     await init_db(settings.TELEGRAM_DATABASE_URL)
 
@@ -150,7 +148,7 @@ async def lifespan(app: FastAPI):
 
 # --- App Setup ---
 
-app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+app: FastAPI = FastAPI(title=settings.APP_API_NAME, lifespan=lifespan)
 app.include_router(endpoints, prefix="/api")
 
 app.add_middleware(

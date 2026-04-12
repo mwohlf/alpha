@@ -5,7 +5,6 @@ Loads settings from environment variables with .env file support.
 
 from typing import List, Optional
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -14,7 +13,7 @@ class Settings(BaseSettings):
 
     # Application
     APP_NAME: str = "Alpha"
-    ENVIRONMENT: str = "dev"
+    APP_API_NAME: str = "Alpha API"  # this is backed into the OpenAPI generated code
     DEBUG: bool = True
     LOGFILE: str = "log/alpha.log"
 

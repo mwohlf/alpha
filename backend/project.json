@@ -42,30 +42,12 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "build": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["generate_venv", "generate_ollama_client"],
-      "outputs": ["{projectRoot}/.build-stamp"],
-      "options": {
-        "commands": [
-          "./.venv/bin/python -m compileall .",
-          "shx touch .build-stamp"
-        ],
-        "parallel": false,
-        "cwd": "{projectRoot}"
-      }
-    },
     "generate_openapi_yaml": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "inputs": [
         "{projectRoot}/main.py",
-        "{projectRoot}/endpoints/router.py",
-        "{projectRoot}/endpoints/models.py",
-        "{projectRoot}/endpoints/auth.py",
-        "{projectRoot}/endpoints/model.py",
-        "{projectRoot}/endpoints/telegram.py",
-        "{projectRoot}/endpoints/deps.py",
+        "{projectRoot}/endpoints/*.py",
         "{projectRoot}/config.py",
         "{workspaceRoot}/etc/extract_openapi.py"
       ],
@@ -79,6 +61,19 @@
         "env": { "PYTHONPATH": "{projectRoot}", "ENV_FILE": ".env.dev" },
         "parallel": false,
         "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate_venv", "generate_ollama_client"],
+      "outputs": ["{projectRoot}/.build-stamp"],
+      "options": {
+        "commands": [
+          "./.venv/bin/python -m compileall .",
+          "shx touch .build-stamp"
+        ],
+        "parallel": false,
+        "cwd": "{projectRoot}"
       }
     },
     "serve": {

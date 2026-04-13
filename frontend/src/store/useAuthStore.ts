@@ -1,7 +1,8 @@
-import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { TokenResponse } from "../generated/models";
+import { getAlphaAPI } from "../generated/endpoints";
+
+const loginApi = getAlphaAPI();
 
 interface AuthState {
   token: string | null;
@@ -15,10 +16,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
 
       login: async (username, password) => {
-        const { data } = await axios.post<TokenResponse>("/api/auth/login", {
-          username,
-          password,
-        });
+        const { data } = await loginApi.login({ username, password });
         set({ token: data.access_token });
       },
 

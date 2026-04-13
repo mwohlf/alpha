@@ -10,30 +10,24 @@
   justify-content: space-between;
   padding: 0 24px;
   height: 48px;
-  background-color: #1e2128;
-  border-bottom: 1px solid #3a3f4b;
+  background-color: var(--bg-base);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .topbar-title {
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-bright);
 }
 
 .topbar-logout {
-  background: none;
-  border: 1px solid #3a3f4b;
-  border-radius: 4px;
-  color: #636d83;
   font-size: 13px;
   padding: 5px 12px;
-  cursor: pointer;
 }
-
 .topbar-logout:hover {
-  border-color: #e06c75;
-  color: #e06c75;
+  border-color: var(--error);
+  color: var(--error);
 }
 
 .layout-body {
@@ -44,7 +38,7 @@
 
 .sidebar {
   width: 200px;
-  background-color: #1e2128;
+  background-color: var(--bg-base);
   padding: 16px 0;
   flex-shrink: 0;
 }
@@ -58,25 +52,25 @@
 .sidebar li a {
   display: block;
   padding: 10px 24px;
-  color: #abb2bf;
+  color: var(--text);
   text-decoration: none;
   font-size: 14px;
 }
 
 .sidebar li a:hover {
-  background-color: #2c313a;
-  color: #ffffff;
+  background-color: var(--bg-raised);
+  color: var(--text-bright);
 }
 
 .sidebar li a.active {
-  background-color: #2c313a;
-  color: #61dafb;
-  border-left: 3px solid #61dafb;
+  background-color: var(--bg-raised);
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
 }
 
 .content {
   flex: 1;
   overflow: hidden;
-  background-color: #282c34;
-  color: #abb2bf;
+  background-color: var(--bg-surface);
+  color: var(--text);
 }

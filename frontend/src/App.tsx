@@ -7,8 +7,11 @@ import {
 } from "react-router-dom";
 import Chat from "./pages/Chat";
 import Login from "./pages/Login";
-import Models from "./pages/Models";
-import Sessions from "./pages/Sessions";
+import Model from "./pages/Model";
+import Conversation from "./pages/Conversation";
+import Persona from "./pages/Persona";
+import Session from "./pages/Session";
+import Memory from "./pages/Memory";
 import Setup from "./pages/Setup";
 import { useAuthStore } from "./store/useAuthStore";
 import Layout from "./components/Layout";
@@ -38,9 +41,12 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/setup" replace />} />
             <Route path="/setup" element={<Setup />} />
-            <Route path="/models" element={<Models />} />
-            <Route path="/sessions" element={<Sessions />} />
+            <Route path="/model" element={<Model />} />
+            <Route path="/persona" element={<Persona />} />
+            <Route path="/memory" element={<Memory />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/conversation" element={<Conversation />} />
+            <Route path="/session" element={<Session />} />
           </Route>
         </Route>
       </Routes>

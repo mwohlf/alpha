@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSessionsStore } from "../store/useSessionsStore";
-import "./Sessions.css";
+import "./Session.css";
 
 function displayName(user: { username?: string | null; first_name?: string | null; last_name?: string | null }): string {
   if (user.first_name || user.last_name) {
@@ -9,7 +9,7 @@ function displayName(user: { username?: string | null; first_name?: string | nul
   return user.username ? `@${user.username}` : "Unknown";
 }
 
-export default function Sessions() {
+export default function Session() {
   const { users, selectedSenderId, messages, loadingUsers, loadingMessages, error, fetchUsers, selectUser } =
     useSessionsStore();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -25,9 +25,9 @@ export default function Sessions() {
   return (
     <div className="sessions">
       <div className="sessions-master">
-        <h2>Users</h2>
-        {loadingUsers && <p className="sessions-status">Loading...</p>}
-        {error && <p className="sessions-error">{error}</p>}
+        <h2 className="section-label">Sessions</h2>
+        {loadingUsers && <p className="page-status">Loading...</p>}
+        {error && <p className="page-error">{error}</p>}
         <ul>
           {users.map((user) => (
             <li
@@ -44,9 +44,9 @@ export default function Sessions() {
 
       <div className="sessions-detail">
         <div className="sessions-messages">
-          {loadingMessages && <p className="sessions-status">Loading...</p>}
+          {loadingMessages && <p className="page-status">Loading...</p>}
           {!selectedSenderId && !loadingMessages && (
-            <p className="sessions-status">Select a user to view messages.</p>
+            <p className="page-status">Select a user to view messages.</p>
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`sessions-bubble-row ${msg.sender_id === null ? "outgoing" : "incoming"}`}>

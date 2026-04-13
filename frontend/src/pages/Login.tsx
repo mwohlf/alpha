@@ -32,10 +32,11 @@ export default function Login() {
     <div className="login-bg">
       <form className="login-card" onSubmit={handleSubmit}>
         <h1>Alpha</h1>
-        {error && <p className="login-error">{error}</p>}
+        {error && <p className="page-error login-error">{error}</p>}
         <label>
           Username
           <input
+            className="field-input"
             type="text"
             value={username}
             autoComplete="username"
@@ -46,6 +47,7 @@ export default function Login() {
         <label>
           Password
           <input
+            className="field-input"
             type="password"
             value={password}
             autoComplete="current-password"
@@ -53,7 +55,7 @@ export default function Login() {
             required
           />
         </label>
-        <button type="submit" disabled={loading}>
+        <button className="btn-primary" type="submit" disabled={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>

@@ -22,15 +22,15 @@ export default function Chat() {
   return (
     <div className="chat">
       <div className="chat-toolbar">
-        <span className="chat-title">Ollama Chat</span>
-        <button className="chat-clear" onClick={clearHistory} disabled={loading}>
+        <span className="chat-title section-label">Ollama Chat</span>
+        <button className="chat-clear btn-ghost" onClick={clearHistory} disabled={loading}>
           Clear
         </button>
       </div>
 
       <div className="chat-messages">
         {history.length === 0 && !loading && (
-          <p className="chat-status">Send a message to start a conversation.</p>
+          <p className="chat-status page-status">Send a message to start a conversation.</p>
         )}
         {history.map((msg, i) => (
           <div key={i} className={`chat-bubble-row ${msg.role}`}>
@@ -48,13 +48,13 @@ export default function Chat() {
             </div>
           </div>
         )}
-        {error && <p className="chat-error">{error}</p>}
+        {error && <p className="chat-error page-error">{error}</p>}
         <div ref={bottomRef} />
       </div>
 
       <form className="chat-input-row" onSubmit={handleSubmit}>
         <input
-          className="chat-input"
+          className="chat-input field-input"
           type="text"
           placeholder="Message Ollama…"
           value={input}
@@ -62,7 +62,7 @@ export default function Chat() {
           disabled={loading}
           autoFocus
         />
-        <button className="chat-send" type="submit" disabled={!input.trim() || loading}>
+        <button className="chat-send btn-primary" type="submit" disabled={!input.trim() || loading}>
           Send
         </button>
       </form>

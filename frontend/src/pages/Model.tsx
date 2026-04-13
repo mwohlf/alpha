@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useModelsStore } from "../store/useModelsStore";
-import "./Models.css";
+import "./Model.css";
 
 function formatSize(bytes?: number | null): string {
   if (!bytes) return "—";
@@ -8,7 +8,7 @@ function formatSize(bytes?: number | null): string {
   return gb >= 1 ? `${gb.toFixed(1)} GB` : `${(bytes / 1e6).toFixed(0)} MB`;
 }
 
-export default function Models() {
+export default function Model() {
   const { models, selected, loading, error, fetchModels, selectModel, deleteModel, addModel } = useModelsStore();
   const [addName, setAddName] = useState("");
   const [pulling, setPulling] = useState(false);
@@ -17,39 +17,37 @@ export default function Models() {
     fetchModels();
   }, [fetchModels]);
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const name = addName.trim();
-    if (!name) return;
-    setPulling(true);
-    await addModel(name);
-    setAddName("");
-    setPulling(false);
-  }
-
   return (
     <div className="models">
       <div className="models-master">
         <div className="models-master-header">
-          <h2>Models</h2>
+          <h2 className="section-label">Models</h2>
         </div>
-        <form className="models-add-form" onSubmit={handleAdd}>
+        <form className="models-add-form" onSubmit={async (e) => {
+          e.preventDefault();
+          const name = addName.trim();
+          if (!name) return;
+          setPulling(true);
+          await addModel(name);
+          setAddName("");
+          setPulling(false);
+        }}>
           <input
-            className="models-add-input"
+            className="models-add-input field-input"
             type="text"
             placeholder="Pull model…"
             value={addName}
             onChange={(e) => setAddName(e.target.value)}
             disabled={pulling || loading}
           />
-          <button className="models-add-btn" type="submit" disabled={!addName.trim() || pulling || loading}>
+          <button className="models-add-btn btn-primary" type="submit" disabled={!addName.trim() || pulling || loading}>
             {pulling ? "…" : "Pull"}
           </button>
         </form>
-        {error && <p className="models-error">{error}</p>}
+        {error && <p className="models-error page-error">{error}</p>}
         <ul className="models-list">
           {loading && models.length === 0 && (
-            <li className="models-status">Loading…</li>
+            <li className="models-status page-status">Loading…</li>
           )}
           {models.map((model) => (
             <li
@@ -68,13 +66,13 @@ export default function Models() {
 
       <div className="models-detail">
         {!selected ? (
-          <p className="models-status">Select a model to view details.</p>
+          <p className="models-status page-status">Select a model to view details.</p>
         ) : (
           <div className="models-detail-content">
             <div className="models-detail-header">
               <h2>{selected.name}</h2>
               <button
-                className="models-delete-btn"
+                className="models-delete-btn btn-danger"
                 onClick={() => deleteModel(selected.name)}
                 disabled={loading}
               >

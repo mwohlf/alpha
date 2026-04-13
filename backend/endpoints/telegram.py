@@ -9,7 +9,7 @@ from endpoints.data_models import (
     TelegramStatusResponse,
     TelegramUserSummary,
 )
-from telegram.message_store import (
+from database.message_store import (
     clear_messages,
     get_message_count,
     get_messages_by_user,

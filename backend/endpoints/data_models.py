@@ -128,3 +128,26 @@ class ChatResponse(BaseModel):
     """Response from the Ollama backend."""
 
     reply: str = Field(..., examples=["42."])
+
+
+class PersonaResponse(BaseModel):
+    id: int
+    name: str
+    content: str
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PersonaCreateRequest(BaseModel):
+    name: str
+    content: str
+    is_active: bool = False
+
+
+class PersonaUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    content: Optional[str] = None
+    is_active: Optional[bool] = None

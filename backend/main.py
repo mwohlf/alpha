@@ -15,7 +15,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from ollama.ollama_client_manager import OllamaClientManager
 from config import settings
 from endpoints.api_router import router as endpoints
-from telegram.message_store import init_db
+from database.session import init_db
+import database.message_store  # registers TelegramMessage with Base before init_db runs
+import database.persona_store  # registers Persona with Base before init_db runs
+from database.persona_store import seed_personas
 from telegram.telegram_client_manager import TelegramClientManager
 
 
@@ -115,6 +118,7 @@ async def stop_telegram(app: FastAPI):
 async def lifespan(app: FastAPI):
     logger.info("Startup begin")
     await init_db()
+    await seed_personas()
     await start_ollama(app)
     await start_telegram(app)
 

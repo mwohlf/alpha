@@ -12,7 +12,7 @@ from pyrogram.types import Message
 
 from config import settings
 from ollama.prompt_handler import create_prompt
-from telegram.message_store import add_message
+from database.message_store import add_message
 
 logger = logging.getLogger("alpha")
 

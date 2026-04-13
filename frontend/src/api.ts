@@ -12,4 +12,15 @@ authAxios.interceptors.request.use((config) => {
   return config;
 });
 
+authAxios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+      window.location.href = "/app/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const api = getAlphaAPI(authAxios);

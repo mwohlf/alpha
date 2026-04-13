@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from endpoints.auth import verify_token
-from endpoints.manager import get_ollama_manager
 from endpoints.data_models import ModelDeleteResponse, ModelListGetResponse, OllamaModel
+from endpoints.dependencies import get_ollama_manager
 from ollama.ollama_client_manager import OllamaClientManager
 
 router = APIRouter(

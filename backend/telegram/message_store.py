@@ -6,6 +6,7 @@ import logging
 from datetime import UTC, datetime
 from typing import List, Optional
 
+from config import settings
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -63,14 +64,14 @@ _engine = None
 _async_session_maker = None
 
 
-async def init_db(database_url: str) -> None:
+async def init_db() -> None:
     """Initialize the database engine and create tables."""
     global _engine, _async_session_maker
 
-    logger.info(f"Initializing Telegram database: {database_url}")
+    logger.info(f"Initializing Telegram database: {settings.TELEGRAM_DATABASE_URL}")
 
     _engine = create_async_engine(
-        database_url,
+        settings.TELEGRAM_DATABASE_URL,
         future=True,
     )
 

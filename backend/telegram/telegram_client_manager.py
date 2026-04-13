@@ -11,7 +11,7 @@ from pyrogram.errors import AuthKeyUnregistered, SessionPasswordNeeded
 from pyrogram.types import Message
 
 from config import settings
-from ollama.telegram_bridge import process_with_ollama
+from ollama.prompt_handler import create_prompt
 from telegram.message_store import add_message
 
 logger = logging.getLogger("alpha")
@@ -108,7 +108,7 @@ async def _handle_new_message(client: Client, message: Message) -> None:
             reply_context = (
                 message.reply_to_message.text if message.reply_to_message else None
             )
-            response_text = await process_with_ollama(
+            response_text = await create_prompt(
                 ollama,
                 message_data["text"],
                 reply_context,

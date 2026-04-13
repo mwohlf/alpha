@@ -36,13 +36,17 @@ Wait for the user to approach you. When they do, treat them with immediate suspi
 # maybe move this into the ollama client manager itself?
 
 
-async def process_with_ollama(
+async def create_prompt(
     ollama_manager,
     text: str,
+    history: Optional[list] = None,
     reply_context: Optional[str] = None,
 ) -> Optional[str]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+        if history:
+            messages.extend(history)
 
         if reply_context:
             messages.append(

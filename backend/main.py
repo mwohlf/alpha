@@ -41,16 +41,19 @@ for uvicorn_logger in ("uvicorn", "uvicorn.error", "uvicorn.access"):
 # --- Service Callbacks ---
 
 
-async def start_ollama(app: FastAPI, base_url: str, model: str):
+async def start_ollama(app: FastAPI):
     """Callback to start or restart the Ollama client."""
     # Stop existing if running
     await stop_ollama(app)
 
     try:
-        manager = OllamaClientManager(base_url=base_url, default_model=model)
+        manager = OllamaClientManager(
+            base_url=settings.OLLAMA_BASE_URL,
+            default_model=settings.OLLAMA_DEFAULT_MODEL,
+        )
         await manager.start()
         app.state.ollama_manager = manager
-        logger.info(f"Ollama started: {model} @ {base_url}")
+        logger.info(f"Ollama started: {settings.OLLAMA_DEFAULT_MODEL} @ {settings.OLLAMA_BASE_URL}")
 
         # Link to telegram if telegram is already running
         if hasattr(app.state, "telegram_manager") and app.state.telegram_manager:
@@ -111,8 +114,8 @@ async def stop_telegram(app: FastAPI):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Startup begin")
-    await init_db(settings.TELEGRAM_DATABASE_URL)
-    await start_ollama(app, settings.OLLAMA_BASE_URL, settings.OLLAMA_DEFAULT_MODEL)
+    await init_db()
+    await start_ollama(app)
     await start_telegram(app)
 
     yield

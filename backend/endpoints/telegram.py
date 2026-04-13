@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from endpoints.auth import verify_token
-from endpoints.manager import get_telegram_manager
+from endpoints.dependencies import get_telegram_manager
 from endpoints.data_models import (
     TelegramChatInfo,
     TelegramClearResponse,

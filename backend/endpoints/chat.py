@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from endpoints.auth import verify_token
-from endpoints.manager import get_ollama_manager
 from endpoints.data_models import ChatRequest, ChatResponse
+from endpoints.dependencies import get_ollama_manager
 from ollama.ollama_client_manager import OllamaClientManager
+from ollama.prompt_handler import create_prompt
 
 router = APIRouter(prefix="/chat", tags=["chat"], dependencies=[Depends(verify_token)])
 
@@ -15,9 +16,11 @@ async def chat_message(
     """
     message interaction with the frontend
     """
-    messages = [{"role": m.role, "content": m.content} for m in body.history]
-    messages.append({"role": "user", "content": body.message})
-
-    result = await ollama.chat(messages)
-    reply = result.get("message", {}).get("content", "")
+    history = [{"role": m.role, "content": m.content} for m in body.history]
+    reply = await create_prompt(ollama, body.message, history=history)
+    if reply is None:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="No response from Ollama.",
+        )
     return ChatResponse(reply=reply)

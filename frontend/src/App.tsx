@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Model from "./pages/Model";
 import Conversation from "./pages/Conversation";
 import Persona from "./pages/Persona";
-import Session from "./pages/Session";
 import Memory from "./pages/Memory";
 import Setup from "./pages/Setup";
 import { useAuthStore } from "./store/useAuthStore";
@@ -46,7 +45,6 @@ export default function App() {
             <Route path="/memory" element={<Memory />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/conversation" element={<Conversation />} />
-            <Route path="/session" element={<Session />} />
           </Route>
         </Route>
       </Routes>

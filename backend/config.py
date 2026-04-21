@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Telegram Database
     TELEGRAM_DATABASE_URL: str = ""
 
+    # Telegram Media
+    TELEGRAM_MEDIA_DIR: str = "media"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

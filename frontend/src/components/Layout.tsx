@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { to: "/setup", label: "Setup" },
   { to: "/memory", label: "Memory" },
   { to: "/conversation", label: "Conversations" },
-  { to: "/session", label: "Sessions" },
   { to: "/chat", label: "Chat" },
 ];
 

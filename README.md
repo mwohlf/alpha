@@ -64,6 +64,25 @@ docker run -p 8000:8000 alpha-app
 | Frontend (proxied) | http://localhost:3000 |
 | Backend | http://localhost:8000 |
 
+## Project Structure
+
+### Backend (`backend/`)
+
+- **`main.py`** — FastAPI app, lifespan manager (starts/stops Telegram + Ollama), static file serving for the SPA, catch-all route for client-side routing
+- **`router.py`** — all API routes under `/api`; JWT auth via `verify_token`
+- **`config.py`** — pydantic-settings; reads `.env` then overrides with the file specified by `ENV_FILE` (defaults to `.env.prod`; dev uses `.env.dev`)
+- **`models.py`** — Pydantic request/response models
+- **`telegram/`** — Pyrogram client wrapper; `client_manager.py` manages lifecycle, `handlers.py` processes incoming messages, `message_store.py` is SQLAlchemy async storage
+- **`ollama/`** — httpx-based async Ollama client; `ollama_client.py` provides chat/generate/stream; `ollama/client/` is generated from `etc/ollama-service.yaml`
+
+### Frontend (`frontend/src/`)
+
+- **`generated/`** — auto-generated axios client (orval) from the backend's OpenAPI spec; never edit by hand
+- **`store/`** — Zustand stores; each store instantiates `getAlphaAPI()` and wraps API calls with loading/error state
+- **`App.tsx`** — entry point
+
+The frontend API client is code-generated from the backend. When adding a new endpoint, add the route and Pydantic model to `router.py` / `models.py`, then run `./nx build frontend` to regenerate the client.
+
 ## CI
 
 ```bash

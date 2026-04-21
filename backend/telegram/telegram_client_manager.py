@@ -3,6 +3,7 @@ Telegram client manager for pyrogram integration.
 """
 
 import logging
+import os
 from datetime import datetime, UTC
 from typing import Optional
 
@@ -65,6 +66,20 @@ def _should_respond_with_ai(message: Message) -> bool:
 
 async def _handle_new_message(client: Client, message: Message) -> None:
     try:
+        _media = (
+            message.photo or message.video or message.audio or message.voice
+            or message.document or message.sticker or message.animation
+        )
+
+        file_path = None
+        if _media:
+            os.makedirs(settings.TELEGRAM_MEDIA_DIR, exist_ok=True)
+            downloaded = await client.download_media(
+                message, file_name=settings.TELEGRAM_MEDIA_DIR + "/"
+            )
+            if downloaded:
+                file_path = downloaded
+
         message_data = {
             "message_id": message.id,
             "chat_id": message.chat.id,
@@ -84,6 +99,8 @@ async def _handle_new_message(client: Client, message: Message) -> None:
             "reply_to_message_id": message.reply_to_message.id
             if message.reply_to_message
             else None,
+            "file_id": _media.file_id if _media else None,
+            "file_path": file_path,
         }
 
         # Mark the current message (and all previous) as read

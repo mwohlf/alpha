@@ -43,6 +43,8 @@ class TelegramMessage(Base):
     message_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     reply_to_message_id = Column(BigInteger, nullable=True)
+    file_id = Column(String(255), nullable=True)
+    file_path = Column(String(512), nullable=True)
     created_at = Column(
         DateTime, default=lambda: datetime.now(UTC), server_default=func.now()
     )

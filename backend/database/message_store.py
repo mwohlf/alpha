@@ -159,6 +159,34 @@ async def get_users() -> List[dict]:
             raise
 
 
+async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessage]:
+    """
+    Return the most recent messages for a chat in chronological order,
+    excluding messages without text (media-only, etc.).
+    """
+    async with get_db_session() as session:
+        try:
+            subq = (
+                select(TelegramMessage)
+                .where(
+                    TelegramMessage.chat_id == chat_id,
+                    TelegramMessage.text.isnot(None),
+                )
+                .order_by(TelegramMessage.date.desc())
+                .limit(limit)
+                .subquery()
+            )
+            result = await session.execute(
+                select(TelegramMessage)
+                .select_entity_from(subq)
+                .order_by(subq.c.date.asc())
+            )
+            return list(result.scalars().all())
+        except Exception as e:
+            logger.error(f"Failed to query chat history for {chat_id}: {e}", exc_info=True)
+            return []
+
+
 async def get_messages_by_user(sender_id: int, limit: int = 100) -> List[TelegramMessage]:
     """
     Return all messages in chats where the sender has participated (both directions).

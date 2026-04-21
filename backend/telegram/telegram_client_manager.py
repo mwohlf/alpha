@@ -13,7 +13,7 @@ from pyrogram.types import Message
 
 from config import settings
 from ollama.prompt_handler import create_prompt
-from database.message_store import add_message
+from database.message_store import add_message, get_chat_history
 
 logger = logging.getLogger("alpha")
 
@@ -125,10 +125,19 @@ async def _handle_new_message(client: Client, message: Message) -> None:
             reply_context = (
                 message.reply_to_message.text if message.reply_to_message else None
             )
+            prior_messages = await get_chat_history(message.chat.id, limit=20)
+            history = [
+                {
+                    "role": "assistant" if m.sender_id is None else "user",
+                    "content": m.text,
+                }
+                for m in prior_messages
+            ]
             response_text = await create_prompt(
                 ollama,
                 message_data["text"],
-                reply_context,
+                history=history,
+                reply_context=reply_context,
             )
             if response_text:
                 # sending the response here

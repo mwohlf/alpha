@@ -20,13 +20,12 @@ async def create_prompt(
     reply_context: Optional[str] = None,
 ) -> Optional[str]:
     """
-    this creates the prompt in JSON format following the ChatML standard
-    we may use
-      - system
-      - user
-      - assistant
-      - developer
+    Build a ChatML message list and get a response from Ollama.
 
+    Roles used:
+      - system   : active persona / instructions
+      - user     : messages from the remote user
+      - assistant: prior responses from the bot
     """
     try:
         persona = await get_active_persona()
@@ -36,12 +35,14 @@ async def create_prompt(
         if history:
             messages.extend(history)
 
+        # Fold reply context directly into the user turn so the role
+        # sequence stays valid (no dangling user turn without a response).
         if reply_context:
-            messages.append(
-                {"role": "user", "content": f"[Previous message]: {reply_context}"}
-            )
+            user_content = f"[Replying to: {reply_context}]\n\n{text}"
+        else:
+            user_content = text
 
-        messages.append({"role": "user", "content": text})
+        messages.append({"role": "user", "content": user_content})
 
         logger.info(f"Processing message with Ollama: {text[:50]}...")
 

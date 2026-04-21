@@ -145,8 +145,8 @@ async def seed_personas() -> None:
         result = await session.execute(select(Persona).limit(1))
         if result.scalar() is None:
             session.add_all([
-                Persona(name="Mistress", content=DEFAULT_SYSTEM_PROMPT, is_active=True),
-                Persona(name="Mistress2", content=_PROMPT_MISTRESS2, is_active=False),
+                Persona(name="Mistress", content=DEFAULT_SYSTEM_PROMPT, is_active=False),
+                Persona(name="Mistress2", content=_PROMPT_MISTRESS2, is_active=True),
                 Persona(name="The Empress", content=_PROMPT_EMPRESS, is_active=False),
                 Persona(name="The Warden", content=_PROMPT_WARDEN, is_active=False),
                 Persona(name="Shadow", content=_PROMPT_SHADOW, is_active=False),

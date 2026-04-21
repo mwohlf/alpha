@@ -166,7 +166,7 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
     """
     async with get_db_session() as session:
         try:
-            subq = (
+            result = await session.execute(
                 select(TelegramMessage)
                 .where(
                     TelegramMessage.chat_id == chat_id,
@@ -174,14 +174,9 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
                 )
                 .order_by(TelegramMessage.date.desc())
                 .limit(limit)
-                .subquery()
             )
-            result = await session.execute(
-                select(TelegramMessage)
-                .select_entity_from(subq)
-                .order_by(subq.c.date.asc())
-            )
-            return list(result.scalars().all())
+            messages = result.scalars().all()
+            return list(reversed(messages))
         except Exception as e:
             logger.error(f"Failed to query chat history for {chat_id}: {e}", exc_info=True)
             return []

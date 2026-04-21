@@ -2,12 +2,15 @@
 Telegram client manager for pyrogram integration.
 """
 
+import asyncio
 import logging
 import os
+import random
 from datetime import datetime, UTC
 from typing import Optional
 
 from pyrogram import Client
+from pyrogram.enums import ChatAction
 from pyrogram.errors import AuthKeyUnregistered, SessionPasswordNeeded
 from pyrogram.types import Message
 
@@ -64,6 +67,29 @@ def _should_respond_with_ai(message: Message) -> bool:
     return False
 
 
+async def _delayed_read(client: Client, chat_id: int, max_id: int) -> None:
+    """Mark messages as read after a random human-like delay."""
+    await asyncio.sleep(random.uniform(2, 20))
+    try:
+        await client.read_chat_history(chat_id=chat_id, max_id=max_id)
+    except Exception as e:
+        logger.warning(f"Failed to mark chat {chat_id} as read: {e}")
+
+
+async def _simulate_typing(client: Client, chat_id: int, response_text: str) -> None:
+    """Show a typing indicator for a duration proportional to the response length."""
+    word_count = len(response_text.split())
+    # ~0.2 s per word, 1.5 s baseline, capped at 12 s
+    typing_seconds = min(1.5 + word_count * 0.2, 12.0)
+    elapsed = 0.0
+    while elapsed < typing_seconds:
+        await client.send_chat_action(chat_id=chat_id, action=ChatAction.TYPING)
+        # Telegram's typing indicator expires after ~5 s, refresh every 4 s
+        tick = min(4.0, typing_seconds - elapsed)
+        await asyncio.sleep(tick)
+        elapsed += tick
+
+
 async def _handle_new_message(client: Client, message: Message) -> None:
     try:
         _media = (
@@ -103,8 +129,8 @@ async def _handle_new_message(client: Client, message: Message) -> None:
             "file_path": file_path,
         }
 
-        # Mark the current message (and all previous) as read
-        await client.read_chat_history(chat_id=message.chat.id, max_id=message.id)
+        # Mark as read after a random delay so it doesn't look instant
+        asyncio.create_task(_delayed_read(client, message.chat.id, message.id))
 
         await add_message(message_data)
 
@@ -140,7 +166,7 @@ async def _handle_new_message(client: Client, message: Message) -> None:
                 reply_context=reply_context,
             )
             if response_text:
-                # sending the response here
+                await _simulate_typing(client, message.chat.id, response_text)
                 sent = await message.reply_text(response_text)
                 logger.info(f"Sent response: {response_text[:50]}...")
                 await add_message(

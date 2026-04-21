@@ -6,10 +6,15 @@ export default function Chat() {
   const { history, loading, error, sendMessage, clearHistory } = useChatStore();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, loading]);
+
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +59,7 @@ export default function Chat() {
 
       <form className="chat-input-row" onSubmit={handleSubmit}>
         <input
+          ref={inputRef}
           className="chat-input field-input"
           type="text"
           placeholder="Message Ollama…"

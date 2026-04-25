@@ -1,55 +1,48 @@
 """
-Bridge between the Telegram client and Ollama for AI-powered message responses.
+Builds ChatML message lists for Ollama requests.
 """
 
 import logging
-from typing import Optional
+from typing import TypedDict
 
 from database.persona_store import get_active_persona
 
 logger = logging.getLogger("alpha")
 
 
-# maybe move this into the ollama client manager itself?
+class ChatMessage(TypedDict):
+    role: str
+    content: str
 
 
 async def create_prompt(
-    ollama_manager,
     text: str,
-    history: Optional[list] = None,
-    reply_context: Optional[str] = None,
-    model: Optional[str] = None,
-) -> Optional[str]:
+    history: list[ChatMessage] | None = None,
+    reply_context: str | None = None,
+) -> list[ChatMessage]:
     """
-    Build a ChatML message list and get a response from Ollama.
+    Build a ChatML message list from the active persona, history, and user text.
+
+    Returns messages for the caller to pass directly to ollama_manager.chat().
 
     Roles used:
       - system   : active persona / instructions
       - user     : messages from the remote user
       - assistant: prior responses from the bot
     """
-    try:
-        persona = await get_active_persona()
-        system_prompt = persona.content
-        messages = [{"role": "system", "content": system_prompt}]
+    persona = await get_active_persona()
+    messages: list[ChatMessage] = [{"role": "system", "content": persona.content}]
 
-        if history:
-            messages.extend(history)
+    if history:
+        messages.extend(history)
 
-        # Fold reply context directly into the user turn so the role
-        # sequence stays valid (no dangling user turn without a response).
-        if reply_context:
-            user_content = f"[Replying to: {reply_context}]\n\n{text}"
-        else:
-            user_content = text
+    if reply_context:
+        user_content = f"[Replying to: {reply_context}]\n\n{text}"
+    else:
+        user_content = text
 
-        messages.append({"role": "user", "content": user_content})
+    messages.append({"role": "user", "content": user_content})
 
-        logger.info(f"Processing message with Ollama: {text[:50]}...")
+    logger.info(f"Built prompt for message: {text[:50]}...")
 
-        response = await ollama_manager.chat(messages=messages, model=model)
-        return response.get("message", {}).get("content") or None
-
-    except Exception as e:
-        logger.error(f"Error processing message with Ollama: {e}", exc_info=True)
-        return None
+    return messages

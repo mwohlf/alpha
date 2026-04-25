@@ -37,12 +37,12 @@ async def add_persona(body: PersonaCreateRequest) -> PersonaResponse:
     summary="Update a persona",
 )
 async def edit_persona(persona_id: int, body: PersonaUpdateRequest) -> PersonaResponse:
-    persona = await update_persona(
-        persona_id=persona_id,
-        name=body.name,
-        content=body.content,
-        is_active=body.is_active,
-    )
-    if persona is None:
+    try:
+        return await update_persona(
+            persona_id=persona_id,
+            name=body.name,
+            content=body.content,
+            is_active=body.is_active,
+        )
+    except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Persona not found")
-    return persona

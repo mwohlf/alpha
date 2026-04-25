@@ -5,7 +5,7 @@ Database model and operations for AI persona / system prompt storage.
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, select, update
 
@@ -86,15 +86,15 @@ async def create_persona(name: str, content: str, is_active: bool = False) -> Pe
 
 async def update_persona(
     persona_id: int,
-    name: Optional[str] = None,
-    content: Optional[str] = None,
-    is_active: Optional[bool] = None,
-) -> Optional[Persona]:
+    name: str | None = None,
+    content: str | None = None,
+    is_active: bool | None = None,
+) -> Persona:
     async with get_db_session() as session:
         result = await session.execute(select(Persona).where(Persona.id == persona_id))
         persona = result.scalar()
         if persona is None:
-            return None
+            raise ValueError(f"Persona {persona_id} not found")
         if is_active is True:
             await session.execute(update(Persona).values(is_active=False))
             # re-fetch after bulk update

@@ -97,11 +97,18 @@
   margin-top: 4px;
 }
 
+.persona-name-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 400px;
+}
+
 .persona-name-input {
   font-size: 14px;
   padding: 7px 10px;
-  width: 100%;
-  max-width: 400px;
+  flex: 1;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -124,7 +131,8 @@
   font-size: 13px;
   color: var(--text);
   cursor: pointer;
-  margin-top: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .persona-form-actions {

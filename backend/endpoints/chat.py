@@ -17,7 +17,7 @@ async def chat_message(
     message interaction with the frontend
     """
     history = [{"role": m.role, "content": m.content} for m in body.history]
-    reply = await create_prompt(ollama, body.message, history=history)
+    reply = await create_prompt(ollama, body.message, history=history, model=body.model)
     if reply is None:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

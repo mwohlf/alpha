@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useModelsStore } from "../store/useModelsStore";
 import "./Chat.css";
 
 export default function Chat() {
-  const { history, loading, error, sendMessage, clearHistory } = useChatStore();
+  const { history, loading, error, sendMessage, clearHistory, selectedModel } = useChatStore();
+  const { fetchModels } = useModelsStore();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,9 +34,14 @@ export default function Chat() {
     <div className="chat">
       <div className="chat-toolbar">
         <span className="chat-title section-label">Ollama Chat</span>
-        <button className="chat-clear btn-ghost" onClick={clearHistory} disabled={loading}>
-          Clear
-        </button>
+        <div className="chat-toolbar-right">
+          <span className="chat-model-label">
+            {selectedModel ?? "Default model"}
+          </span>
+          <button className="chat-clear btn-ghost" onClick={clearHistory} disabled={loading}>
+            Clear
+          </button>
+        </div>
       </div>
 
       <div className="chat-messages">

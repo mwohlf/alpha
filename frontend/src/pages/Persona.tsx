@@ -17,8 +17,11 @@ export default function Persona() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchPersonas();
-  }, [fetchPersonas]);
+    fetchPersonas().then(() => {
+      const active = usePersonaStore.getState().personas.find((p) => p.is_active);
+      if (active) selectPersona(active);
+    });
+  }, []);
 
   function selectPersona(p: PersonaResponse) {
     setSelected(p);
@@ -96,14 +99,25 @@ export default function Persona() {
             </div>
 
             <label className="persona-field-label">Name</label>
-            <input
-              className="field-input persona-name-input"
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Persona name"
-              disabled={saving}
-            />
+            <div className="persona-name-row">
+              <input
+                className="field-input persona-name-input"
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Persona name"
+                disabled={saving}
+              />
+              <label className="persona-active-label">
+                <input
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                  disabled={saving}
+                />
+                Active
+              </label>
+            </div>
 
             <label className="persona-field-label">System prompt</label>
             <textarea
@@ -113,16 +127,6 @@ export default function Persona() {
               placeholder="Enter the system prompt…"
               disabled={saving}
             />
-
-            <label className="persona-active-label">
-              <input
-                type="checkbox"
-                checked={form.is_active}
-                onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                disabled={saving}
-              />
-              Set as active
-            </label>
 
             <div className="persona-form-actions">
               <button

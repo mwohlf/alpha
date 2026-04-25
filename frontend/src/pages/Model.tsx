@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useModelsStore } from "../store/useModelsStore";
+import { useChatStore } from "../store/useChatStore";
 import "./Model.css";
 
 function formatSize(bytes?: number | null): string {
@@ -10,6 +11,7 @@ function formatSize(bytes?: number | null): string {
 
 export default function Model() {
   const { models, selected, loading, error, fetchModels, selectModel, deleteModel, addModel } = useModelsStore();
+  const { selectedModel: defaultModel, setSelectedModel: setDefaultModel } = useChatStore();
   const [addName, setAddName] = useState("");
   const [pulling, setPulling] = useState(false);
 
@@ -56,9 +58,14 @@ export default function Model() {
               onClick={() => selectModel(model)}
             >
               <span className="models-item-name">{model.name}</span>
-              {model.details?.parameter_size && (
-                <span className="models-item-badge">{model.details.parameter_size}</span>
-              )}
+              <span className="models-item-badges">
+                {model.details?.parameter_size && (
+                  <span className="models-item-badge">{model.details.parameter_size}</span>
+                )}
+                {model.name === defaultModel && (
+                  <span className="models-item-badge models-item-badge--default">default</span>
+                )}
+              </span>
             </li>
           ))}
         </ul>
@@ -71,13 +78,6 @@ export default function Model() {
           <div className="models-detail-content">
             <div className="models-detail-header">
               <h2>{selected.name}</h2>
-              <button
-                className="models-delete-btn btn-danger"
-                onClick={() => deleteModel(selected.name)}
-                disabled={loading}
-              >
-                Delete
-              </button>
             </div>
             <table className="models-detail-table">
               <tbody>
@@ -111,6 +111,30 @@ export default function Model() {
                 )}
               </tbody>
             </table>
+            <div className="models-detail-actions">
+              {selected.name === defaultModel ? (
+                <button
+                  className="models-default-btn btn-ghost models-default-btn--active"
+                  onClick={() => setDefaultModel(null)}
+                >
+                  Default ✓
+                </button>
+              ) : (
+                <button
+                  className="models-default-btn btn-ghost"
+                  onClick={() => setDefaultModel(selected.name)}
+                >
+                  Set as default
+                </button>
+              )}
+              <button
+                className="models-delete-btn btn-danger"
+                onClick={() => deleteModel(selected.name)}
+                disabled={loading}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         )}
       </div>

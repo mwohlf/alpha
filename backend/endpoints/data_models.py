@@ -122,6 +122,9 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = Field(
         default_factory=list, description="Prior conversation turns"
     )
+    model: Optional[str] = Field(
+        None, description="Ollama model name to use; falls back to server default"
+    )
 
 
 class ChatResponse(BaseModel):

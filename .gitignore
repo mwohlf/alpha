@@ -31,3 +31,4 @@ etc/alpha-service.yaml
 log/
 etc/telegram_messages.db
 
+.remember

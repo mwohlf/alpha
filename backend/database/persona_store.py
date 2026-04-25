@@ -20,7 +20,7 @@ def _load(filename: str) -> str:
     return (_PERSONAS_DIR / filename).read_text(encoding="utf-8")
 
 
-DEFAULT_SYSTEM_PROMPT = _load("mistress.txt")
+DEFAULT_SYSTEM_PROMPT = _load("character1.txt")
 
 
 class Persona(Base):
@@ -39,11 +39,11 @@ async def seed_personas() -> None:
         result = await session.execute(select(Persona).limit(1))
         if result.scalar() is None:
             session.add_all([
-                Persona(name="Mistress", content=_load("mistress.txt"), is_active=False),
-                Persona(name="Mistress2", content=_load("mistress2.txt"), is_active=True),
-                Persona(name="The Empress", content=_load("the_empress.txt"), is_active=False),
-                Persona(name="The Warden", content=_load("the_warden.txt"), is_active=False),
-                Persona(name="Shadow", content=_load("shadow.txt"), is_active=False),
+                Persona(name="Character1", content=_load("character1.txt"), is_active=False),
+                Persona(name="Character2", content=_load("character2.txt"), is_active=True),
+                Persona(name="Character3", content=_load("character3.txt"), is_active=False),
+                Persona(name="Character4", content=_load("character4.txt"), is_active=False),
+                Persona(name="Character5", content=_load("character5.txt"), is_active=False),
             ])
             await session.commit()
             logger.info("Seeded default personas")

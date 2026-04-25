@@ -15,6 +15,21 @@
   flex-shrink: 0;
 }
 
+.chat-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-model-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chat-clear {
   font-size: 12px;
   padding: 4px 10px;

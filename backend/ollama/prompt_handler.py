@@ -18,6 +18,7 @@ async def create_prompt(
     text: str,
     history: Optional[list] = None,
     reply_context: Optional[str] = None,
+    model: Optional[str] = None,
 ) -> Optional[str]:
     """
     Build a ChatML message list and get a response from Ollama.
@@ -46,7 +47,7 @@ async def create_prompt(
 
         logger.info(f"Processing message with Ollama: {text[:50]}...")
 
-        response = await ollama_manager.chat(messages=messages)
+        response = await ollama_manager.chat(messages=messages, model=model)
         return response.get("message", {}).get("content") or None
 
     except Exception as e:

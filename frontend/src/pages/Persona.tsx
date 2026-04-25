@@ -8,8 +8,14 @@ type FormState = { name: string; content: string; is_active: boolean };
 const EMPTY_FORM: FormState = { name: "", content: "", is_active: false };
 
 export default function Persona() {
-  const { personas, loading, error, fetchPersonas, createPersona, updatePersona } =
-    usePersonaStore();
+  const {
+    personas,
+    loading,
+    error,
+    fetchPersonas,
+    createPersona,
+    updatePersona,
+  } = usePersonaStore();
 
   const [selected, setSelected] = useState<PersonaResponse | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -18,7 +24,9 @@ export default function Persona() {
 
   useEffect(() => {
     fetchPersonas().then(() => {
-      const active = usePersonaStore.getState().personas.find((p) => p.is_active);
+      const active = usePersonaStore
+        .getState()
+        .personas.find((p) => p.is_active);
       if (active) selectPersona(active);
     });
   }, []);
@@ -54,13 +62,12 @@ export default function Persona() {
     await fetchPersonas();
   }
 
-  const dirty =
-    isNew
-      ? form.name.trim() !== "" || form.content !== ""
-      : selected !== null &&
-        (form.name !== selected.name ||
-          form.content !== selected.content ||
-          form.is_active !== selected.is_active);
+  const dirty = isNew
+    ? form.name.trim() !== "" || form.content !== ""
+    : selected !== null &&
+      (form.name !== selected.name ||
+        form.content !== selected.content ||
+        form.is_active !== selected.is_active);
 
   return (
     <div className="persona">
@@ -83,7 +90,9 @@ export default function Persona() {
               onClick={() => selectPersona(p)}
             >
               <span className="persona-item-name">{p.name}</span>
-              {p.is_active && <span className="persona-item-badge">active</span>}
+              {p.is_active && (
+                <span className="persona-item-badge">active</span>
+              )}
             </li>
           ))}
         </ul>
@@ -91,7 +100,9 @@ export default function Persona() {
 
       <div className="persona-detail">
         {!selected && !isNew ? (
-          <p className="page-status">Select a persona to edit, or create a new one.</p>
+          <p className="page-status">
+            Select a persona to edit, or create a new one.
+          </p>
         ) : (
           <form className="persona-form" onSubmit={handleSave}>
             <div className="persona-form-header">
@@ -104,7 +115,9 @@ export default function Persona() {
                 className="field-input persona-name-input"
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
                 placeholder="Persona name"
                 disabled={saving}
               />
@@ -112,7 +125,9 @@ export default function Persona() {
                 <input
                   type="checkbox"
                   checked={form.is_active}
-                  onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, is_active: e.target.checked }))
+                  }
                   disabled={saving}
                 />
                 Active
@@ -123,7 +138,9 @@ export default function Persona() {
             <textarea
               className="field-input persona-content-input"
               value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, content: e.target.value }))
+              }
               placeholder="Enter the system prompt…"
               disabled={saving}
             />
@@ -132,7 +149,9 @@ export default function Persona() {
               <button
                 type="submit"
                 className="btn-primary persona-save-btn"
-                disabled={saving || !dirty || !form.name.trim() || !form.content.trim()}
+                disabled={
+                  saving || !dirty || !form.name.trim() || !form.content.trim()
+                }
               >
                 {saving ? "Saving…" : isNew ? "Create" : "Save"}
               </button>

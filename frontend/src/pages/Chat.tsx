@@ -4,7 +4,8 @@ import { useModelsStore } from "../store/useModelsStore";
 import "./Chat.css";
 
 export default function Chat() {
-  const { history, loading, error, sendMessage, clearHistory, selectedModel } = useChatStore();
+  const { history, loading, error, sendMessage, clearHistory, selectedModel } =
+    useChatStore();
   const { fetchModels } = useModelsStore();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -38,7 +39,11 @@ export default function Chat() {
           <span className="chat-model-label">
             {selectedModel ?? "Default model"}
           </span>
-          <button className="chat-clear btn-ghost" onClick={clearHistory} disabled={loading}>
+          <button
+            className="chat-clear btn-ghost"
+            onClick={clearHistory}
+            disabled={loading}
+          >
             Clear
           </button>
         </div>
@@ -46,7 +51,9 @@ export default function Chat() {
 
       <div className="chat-messages">
         {history.length === 0 && !loading && (
-          <p className="chat-status page-status">Send a message to start a conversation.</p>
+          <p className="chat-status page-status">
+            Send a message to start a conversation.
+          </p>
         )}
         {history.map((msg, i) => (
           <div key={i} className={`chat-bubble-row ${msg.role}`}>
@@ -79,7 +86,11 @@ export default function Chat() {
           disabled={loading}
           autoFocus
         />
-        <button className="chat-send btn-primary" type="submit" disabled={!input.trim() || loading}>
+        <button
+          className="chat-send btn-primary"
+          type="submit"
+          disabled={!input.trim() || loading}
+        >
           Send
         </button>
       </form>

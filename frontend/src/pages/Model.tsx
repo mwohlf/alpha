@@ -19,14 +19,6 @@ export default function Model() {
     fetchModels();
   }, [fetchModels]);
 
-  // Pre-select the default model when the page loads
-  useEffect(() => {
-    if (selected === null && defaultModel && models.length > 0) {
-      const match = models.find((m) => m.name === defaultModel);
-      if (match) selectModel(match);
-    }
-  }, [models, defaultModel, selected, selectModel]);
-
   return (
     <div className="models">
       <div className="models-master">

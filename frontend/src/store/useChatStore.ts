@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { api } from "../api";
 import type { ChatMessage as ApiChatMessage } from "../generated/models";
 
@@ -17,31 +18,46 @@ interface ChatState {
   clearHistory: () => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
-  history: [],
-  loading: false,
-  error: null,
-  selectedModel: null,
+export const useChatStore = create<ChatState>()(
+  devtools(
+    (set, get) => ({
+      history: [],
+      loading: false,
+      error: null,
+      selectedModel: null,
 
-  setSelectedModel: (model) => set({ selectedModel: model }),
+      setSelectedModel: (model) => set({ selectedModel: model }),
 
-  sendMessage: async (message: string) => {
-    const { history, selectedModel } = get();
-    const userMessage: ChatMessage = { role: "user", content: message };
-    set({ history: [...history, userMessage], loading: true, error: null });
+      sendMessage: async (message: string) => {
+        const { history, selectedModel } = get();
+        const userMessage: ChatMessage = { role: "user", content: message };
+        set({ history: [...history, userMessage], loading: true, error: null });
 
-    try {
-      const { data } = await api.chatMessageApiChatMessagePost({
-        message,
-        history: history as ApiChatMessage[],
-        model: selectedModel ?? undefined,
-      });
-      const assistantMessage: ChatMessage = { role: "assistant", content: data.reply };
-      set((s) => ({ history: [...s.history, assistantMessage], loading: false }));
-    } catch {
-      set((s) => ({ loading: false, error: "Failed to get response", history: s.history.slice(0, -1) }));
-    }
-  },
+        try {
+          const { data } = await api.chatMessageApiChatMessagePost({
+            message,
+            history: history as ApiChatMessage[],
+            model: selectedModel ?? undefined,
+          });
+          const assistantMessage: ChatMessage = {
+            role: "assistant",
+            content: data.reply,
+          };
+          set((s) => ({
+            history: [...s.history, assistantMessage],
+            loading: false,
+          }));
+        } catch {
+          set((s) => ({
+            loading: false,
+            error: "Failed to get response",
+            history: s.history.slice(0, -1),
+          }));
+        }
+      },
 
-  clearHistory: () => set({ history: [], error: null }),
-}));
+      clearHistory: () => set({ history: [], error: null }),
+    }),
+    { name: "ChatStore" },
+  ),
+);

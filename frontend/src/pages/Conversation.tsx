@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 import { useSessionsStore } from "../store/useSessionsStore";
 import "./Conversation.css";
 
-function displayName(user: { username?: string | null; first_name?: string | null; last_name?: string | null }): string {
+function displayName(user: {
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+}): string {
   if (user.first_name || user.last_name) {
     return [user.first_name, user.last_name].filter(Boolean).join(" ");
   }
@@ -10,8 +14,16 @@ function displayName(user: { username?: string | null; first_name?: string | nul
 }
 
 export default function Conversation() {
-  const { users, selectedSenderId, messages, loadingUsers, loadingMessages, error, fetchUsers, selectUser } =
-    useSessionsStore();
+  const {
+    users,
+    selectedSenderId,
+    messages,
+    loadingUsers,
+    loadingMessages,
+    error,
+    fetchUsers,
+    selectUser,
+  } = useSessionsStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,13 +61,22 @@ export default function Conversation() {
             <p className="page-status">Select a user to view messages.</p>
           )}
           {messages.map((msg) => (
-            <div key={msg.id} className={`sessions-bubble-row ${msg.sender_id === null ? "outgoing" : "incoming"}`}>
+            <div
+              key={msg.id}
+              className={`sessions-bubble-row ${msg.sender_id === null ? "outgoing" : "incoming"}`}
+            >
               <div className="sessions-bubble">
                 {msg.sender_id !== null && (
-                  <span className="sessions-bubble-chat">{msg.chat.title ?? `Chat ${msg.chat.chat_id}`}</span>
+                  <span className="sessions-bubble-chat">
+                    {msg.chat.title ?? `Chat ${msg.chat.chat_id}`}
+                  </span>
                 )}
-                <p className="sessions-bubble-text">{msg.text ?? <em>non-text message</em>}</p>
-                <span className="sessions-bubble-time">{new Date(msg.date).toLocaleString()}</span>
+                <p className="sessions-bubble-text">
+                  {msg.text ?? <em>non-text message</em>}
+                </p>
+                <span className="sessions-bubble-time">
+                  {new Date(msg.date).toLocaleString()}
+                </span>
               </div>
             </div>
           ))}

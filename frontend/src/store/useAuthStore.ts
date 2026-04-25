@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { devtools, persist, createJSONStorage } from "zustand/middleware";
 import { getAlphaAPI } from "../generated/endpoints";
 
 const loginApi = getAlphaAPI();
@@ -11,22 +11,25 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
+  devtools(
+    persist(
+      (set) => ({
+        token: null,
 
-      login: async (username, password) => {
-        const { data } = await loginApi.login({ username, password });
-        set({ token: data.access_token });
-      },
+        login: async (username, password) => {
+          const { data } = await loginApi.login({ username, password });
+          set({ token: data.access_token });
+        },
 
-      logout: () => {
-        set({ token: null });
+        logout: () => {
+          set({ token: null });
+        },
+      }),
+      {
+        name: "auth-storage",
+        storage: createJSONStorage(() => localStorage),
       },
-    }),
-    {
-      name: "auth-storage",
-      storage: createJSONStorage(() => localStorage),
-    },
+    ),
+    { name: "AuthStore" },
   ),
 );

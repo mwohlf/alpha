@@ -55,8 +55,8 @@ async def get_personas() -> List[Persona]:
         return list(result.scalars().all())
 
 
-async def get_active_persona() -> Optional[Persona]:
-    """Return the active persona, falling back to the first one if none is flagged."""
+async def get_active_persona() -> Persona:
+    """Return the active persona, falling back to the first one, then a default."""
     async with get_db_session() as session:
         result = await session.execute(
             select(Persona).where(Persona.is_active).limit(1)
@@ -66,7 +66,11 @@ async def get_active_persona() -> Optional[Persona]:
             return persona
         # fallback: return first persona
         result = await session.execute(select(Persona).order_by(Persona.id.asc()).limit(1))
-        return result.scalar()
+        persona = result.scalar()
+        if persona is not None:
+            return persona
+        # last resort: ephemeral default (empty DB, pre-seed)
+        return Persona(name="Default", content=DEFAULT_SYSTEM_PROMPT, is_active=True)
 
 
 async def create_persona(name: str, content: str, is_active: bool = False) -> Persona:

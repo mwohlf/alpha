@@ -5,7 +5,7 @@ Bridge between the Telegram client and Ollama for AI-powered message responses.
 import logging
 from typing import Optional
 
-from database.persona_store import DEFAULT_SYSTEM_PROMPT, get_active_persona
+from database.persona_store import get_active_persona
 
 logger = logging.getLogger("alpha")
 
@@ -30,7 +30,7 @@ async def create_prompt(
     """
     try:
         persona = await get_active_persona()
-        system_prompt = persona.content if persona else DEFAULT_SYSTEM_PROMPT
+        system_prompt = persona.content
         messages = [{"role": "system", "content": system_prompt}]
 
         if history:

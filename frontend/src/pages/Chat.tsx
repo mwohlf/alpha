@@ -23,10 +23,11 @@ export default function Chat() {
     if (!loading) inputRef.current?.focus();
   }, [loading]);
 
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed) return;
     setInput("");
     sendMessage(trimmed);
   }
@@ -62,7 +63,7 @@ export default function Chat() {
             </div>
           </div>
         ))}
-        {loading && (
+        {loading && history.at(-1)?.role !== "assistant" && (
           <div className="chat-bubble-row assistant">
             <div className="chat-bubble chat-bubble-thinking">
               <span />
@@ -83,13 +84,12 @@ export default function Chat() {
           placeholder="Message Ollama…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={loading}
           autoFocus
         />
         <button
           className="chat-send btn-primary"
           type="submit"
-          disabled={!input.trim() || loading}
+          disabled={!input.trim()}
         >
           Send
         </button>

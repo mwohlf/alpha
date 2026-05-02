@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { api } from "../api";
+import { useAuthStore } from "./useAuthStore";
 import type { ChatMessage as ApiChatMessage } from "../generated/models";
 
 export interface ChatMessage {
@@ -18,6 +18,10 @@ interface ChatState {
   clearHistory: () => void;
 }
 
+// Module-level — not reactive state
+let currentController: AbortController | null = null;
+let historyBeforeRequest: ChatMessage[] = [];
+
 export const useChatStore = create<ChatState>()(
   devtools(
     (set, get) => ({
@@ -29,34 +33,118 @@ export const useChatStore = create<ChatState>()(
       setSelectedModel: (model) => set({ selectedModel: model }),
 
       sendMessage: async (message: string) => {
-        const { history, selectedModel } = get();
+        // If a request is already in-flight, cancel it and reuse the pre-request
+        // history snapshot so there's no orphaned user message without a reply.
+        if (currentController) {
+          currentController.abort();
+          currentController = null;
+          // historyBeforeRequest already holds the right snapshot
+        } else {
+          historyBeforeRequest = get().history;
+        }
+
+        const snapshot = historyBeforeRequest;
+        const { selectedModel } = get();
         const userMessage: ChatMessage = { role: "user", content: message };
-        set({ history: [...history, userMessage], loading: true, error: null });
+
+        set({ history: [...snapshot, userMessage], loading: true, error: null });
+
+        const controller = new AbortController();
+        currentController = controller;
 
         try {
-          const { data } = await api.chatMessageApiChatMessagePost({
-            message,
-            history: history as ApiChatMessage[],
-            model: selectedModel ?? undefined,
+          const token = useAuthStore.getState().token;
+          const response = await fetch("/api/chat/stream", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              message,
+              history: snapshot as ApiChatMessage[],
+              model: selectedModel ?? undefined,
+            }),
+            signal: controller.signal,
           });
-          const assistantMessage: ChatMessage = {
-            role: "assistant",
-            content: data.reply,
-          };
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              useAuthStore.getState().logout();
+              window.location.href = "/app/login";
+              return;
+            }
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          // Add empty assistant placeholder; chunks will fill it in
           set((s) => ({
-            history: [...s.history, assistantMessage],
-            loading: false,
+            history: [...s.history, { role: "assistant" as const, content: "" }],
           }));
-        } catch {
-          set((s) => ({
-            loading: false,
-            error: "Failed to get response",
-            history: s.history.slice(0, -1),
-          }));
+
+          const reader = response.body!.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+
+          outer: while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop() ?? "";
+
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const data = JSON.parse(line.slice(6)) as {
+                content?: string;
+                done?: boolean;
+                error?: string;
+              };
+              if (data.error) throw new Error(data.error);
+              if (data.content) {
+                set((s) => ({
+                  history: [
+                    ...s.history.slice(0, -1),
+                    {
+                      role: "assistant" as const,
+                      content: (s.history.at(-1)?.content ?? "") + data.content,
+                    },
+                  ],
+                }));
+              }
+              if (data.done) break outer;
+            }
+          }
+
+          historyBeforeRequest = get().history;
+          set({ loading: false });
+        } catch (e: unknown) {
+          if (e instanceof Error && e.name === "AbortError") {
+            // Intentionally cancelled — new sendMessage call will take over
+            return;
+          }
+          // Real error: drop partial assistant bubble, keep the user message visible
+          set((s) => {
+            const h = s.history;
+            const trimmed = h.at(-1)?.role === "assistant" ? h.slice(0, -1) : h;
+            return { loading: false, error: "Failed to get response", history: trimmed };
+          });
+        } finally {
+          if (currentController === controller) {
+            currentController = null;
+          }
         }
       },
 
-      clearHistory: () => set({ history: [], error: null }),
+      clearHistory: () => {
+        if (currentController) {
+          currentController.abort();
+          currentController = null;
+        }
+        historyBeforeRequest = [];
+        set({ history: [], error: null, loading: false });
+      },
     }),
     { name: "ChatStore" },
   ),

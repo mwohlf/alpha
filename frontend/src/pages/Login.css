@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   background-color: var(--bg-base);
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .login-card {
@@ -12,9 +14,18 @@
   border-radius: 8px;
   padding: 40px 36px;
   width: 320px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 400px) {
+  .login-card {
+    width: 100%;
+    padding: 28px 20px;
+  }
 }
 
 .login-card h1 {

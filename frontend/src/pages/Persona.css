@@ -147,3 +147,30 @@
 }
 
 .persona-error { padding: 4px 12px 8px; }
+
+/* ── Mobile ── */
+
+@media (max-width: 640px) {
+  .persona { flex-direction: column; height: auto; }
+
+  .persona-master {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .persona-detail { min-height: 0; }
+
+  .persona-form {
+    padding: 16px;
+    height: auto;
+  }
+
+  .persona-name-row {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .persona-content-input { min-height: 200px; }
+}

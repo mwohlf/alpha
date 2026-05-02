@@ -120,3 +120,13 @@
 
 .chat-status { margin-top: 32px; }
 .chat-error  { padding: 4px 0; }
+
+/* ── Mobile ── */
+
+@media (max-width: 640px) {
+  .chat-toolbar { padding: 10px 12px; }
+  .chat-model-label { max-width: 120px; }
+  .chat-bubble { max-width: 88%; }
+  .chat-messages { padding: 12px; }
+  .chat-input-row { padding: 10px 12px; }
+}

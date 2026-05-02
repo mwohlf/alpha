@@ -107,3 +107,27 @@
   color: var(--text-muted);
   align-self: flex-end;
 }
+
+/* ── Mobile ── */
+
+@media (max-width: 640px) {
+  .sessions { flex-direction: column; height: auto; }
+
+  .sessions-master {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sessions-master .section-label { padding: 12px 16px 8px; }
+
+  .sessions-detail { min-height: 0; }
+
+  .sessions-messages {
+    padding: 12px;
+    min-height: 300px;
+  }
+
+  .sessions-bubble { max-width: 88%; }
+}

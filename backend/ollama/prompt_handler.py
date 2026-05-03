@@ -44,5 +44,6 @@ async def create_prompt(
     messages.append({"role": "user", "content": user_content})
 
     logger.info(f"Built prompt for message: {text[:50]}...")
+    logger.info(f"Complete generated messages: {messages}")
 
     return messages

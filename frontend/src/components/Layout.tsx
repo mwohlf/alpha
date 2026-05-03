@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 export default function Layout() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   function handleLogout() {
     logout();
@@ -39,18 +39,14 @@ export default function Layout() {
           Sign out
         </button>
       </header>
-      {sidebarOpen && (
-        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
-      )}
-      <div className="layout-body">
-        <nav className={`sidebar${sidebarOpen ? " sidebar--open" : ""}`}>
+<div className="layout-body">
+        <nav className={`sidebar${sidebarOpen ? " sidebar--open" : " sidebar--closed"}`}>
           <ul>
             {NAV_ITEMS.map(({ to, label }) => (
               <li key={to}>
                 <NavLink
                   to={to}
                   className={({ isActive }) => (isActive ? "active" : "")}
-                  onClick={() => setSidebarOpen(false)}
                 >
                   {label}
                 </NavLink>

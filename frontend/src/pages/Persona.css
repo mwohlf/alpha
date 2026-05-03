@@ -8,17 +8,18 @@
 .persona-master {
   width: 220px;
   flex-shrink: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: var(--bg-base);
 }
 
 .persona-master-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 8px;
+  padding: 16px 16px 10px;
 }
 
 .persona-new-btn {
@@ -38,14 +39,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+  padding: 9px 14px 9px 16px;
   cursor: pointer;
-  border-left: 3px solid transparent;
-  color: var(--text);
-  font-size: 14px;
+  border-left: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
-.persona-list li:hover  { background-color: var(--bg-raised); }
-.persona-list li.active { background-color: var(--bg-raised); border-left-color: var(--accent); color: var(--text-bright); }
+.persona-list li:hover  { background-color: var(--bg-raised); color: var(--text); }
+.persona-list li.active { background-color: var(--accent-dim); border-left-color: var(--accent); color: var(--text-bright); font-weight: 600; }
 
 .persona-item-name {
   overflow: hidden;
@@ -54,10 +57,11 @@
 }
 
 .persona-item-badge {
-  font-size: 11px;
-  background-color: var(--accent-dark);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  background-color: var(--accent-dim);
+  border: 1px solid rgba(97, 218, 251, 0.3);
+  border-radius: 8px;
   padding: 1px 7px;
   color: var(--accent);
   flex-shrink: 0;
@@ -76,23 +80,25 @@
 .persona-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 20px 24px;
+  gap: 10px;
+  padding: 24px 28px;
   height: 100%;
   box-sizing: border-box;
   overflow-y: auto;
 }
 
 .persona-form-header h2 {
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--text-bright);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .persona-field-label {
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -101,12 +107,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 .persona-name-input {
   font-size: 14px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
@@ -114,12 +120,12 @@
 
 .persona-content-input {
   font-size: 13px;
-  padding: 10px 12px;
+  padding: 10px 13px;
   width: 100%;
   flex: 1;
   min-height: 320px;
   resize: vertical;
-  line-height: 1.6;
+  line-height: 1.65;
   font-family: monospace;
   box-sizing: border-box;
 }
@@ -146,7 +152,7 @@
   padding: 7px 20px;
 }
 
-.persona-error { padding: 4px 12px 8px; }
+.persona-error { padding: 4px 14px 8px; }
 
 /* ── Mobile ── */
 

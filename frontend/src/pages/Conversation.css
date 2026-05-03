@@ -8,10 +8,11 @@
 .sessions-master {
   width: 240px;
   flex-shrink: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: var(--bg-base);
 }
 
 .sessions-master .section-label { padding: 16px 16px 12px; }
@@ -28,14 +29,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+  padding: 9px 14px 9px 16px;
   cursor: pointer;
-  border-left: 3px solid transparent;
-  color: var(--text);
-  font-size: 14px;
+  border-left: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
 }
-.sessions-master li:hover  { background-color: var(--bg-raised); }
-.sessions-master li.active { background-color: var(--bg-raised); border-left-color: var(--accent); color: var(--text-bright); }
+.sessions-master li:hover  { background-color: var(--bg-raised); color: var(--text); }
+.sessions-master li.active { background-color: var(--accent-dim); border-left-color: var(--accent); color: var(--text-bright); font-weight: 600; }
 
 .sessions-user-name {
   overflow: hidden;
@@ -44,9 +47,11 @@
 }
 
 .sessions-user-count {
-  font-size: 11px;
-  background-color: var(--border);
-  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  background-color: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
   padding: 1px 7px;
   color: var(--text-muted);
   flex-shrink: 0;
@@ -65,10 +70,10 @@
 .sessions-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sessions-bubble-row { display: flex; }
@@ -77,35 +82,46 @@
 
 .sessions-bubble {
   max-width: 65%;
-  padding: 8px 12px;
-  border-radius: 12px;
+  padding: 8px 13px;
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.sessions-bubble-row.incoming .sessions-bubble { background-color: var(--bg-raised); border-bottom-left-radius: 4px; }
-.sessions-bubble-row.outgoing .sessions-bubble { background-color: #1a4a6b; border-bottom-right-radius: 4px; }
+.sessions-bubble-row.incoming .sessions-bubble {
+  background-color: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-bottom-left-radius: var(--radius-sm);
+}
+.sessions-bubble-row.outgoing .sessions-bubble {
+  background-color: #163549;
+  border: 1px solid #1e4a66;
+  border-bottom-right-radius: var(--radius-sm);
+}
 
 .sessions-bubble-chat {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--accent);
+  font-weight: 600;
   margin-bottom: 2px;
 }
 
 .sessions-bubble-text {
   margin: 0;
   font-size: 14px;
+  line-height: 1.55;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
 }
-.sessions-bubble-row.outgoing .sessions-bubble-text { color: #c8d8e8; }
+.sessions-bubble-row.outgoing .sessions-bubble-text { color: #b8cfe0; }
 
 .sessions-bubble-time {
   font-size: 10px;
   color: var(--text-muted);
   align-self: flex-end;
+  margin-top: 2px;
 }
 
 /* ── Mobile ── */
@@ -125,7 +141,7 @@
   .sessions-detail { min-height: 0; }
 
   .sessions-messages {
-    padding: 12px;
+    padding: 14px 12px;
     min-height: 300px;
   }
 

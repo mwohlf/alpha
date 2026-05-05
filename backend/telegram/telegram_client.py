@@ -5,6 +5,8 @@ Pyrogram Client subclass with typed Ollama integration and message handling.
 import asyncio
 import logging
 import os
+import random
+import re
 from datetime import datetime, UTC
 
 from pyrogram import Client
@@ -19,6 +21,20 @@ from telegram.chat_state import ChatState
 from telegram.utils import get_message_type, should_respond_with_ai
 
 logger = logging.getLogger("alpha")
+
+
+def _make_typo(word: str) -> str:
+    """Return *word* with a single realistic keystroke-level typo."""
+    pos = random.randint(1, len(word) - 2)
+    match random.randint(0, 2):
+        case 0:  # swap adjacent characters
+            chars = list(word)
+            chars[pos], chars[pos + 1] = chars[pos + 1], chars[pos]
+            return "".join(chars)
+        case 1:  # drop a character
+            return word[:pos] + word[pos + 1:]
+        case _:  # double a character
+            return word[:pos] + word[pos] + word[pos:]
 
 
 class TelegramClient(Client):
@@ -163,6 +179,7 @@ class TelegramClient(Client):
             result = await self.ollama_manager.chat(messages=messages)
             response_text = result.get("message", {}).get("content") or None
             if response_text:
+                response_text = self._postprocess_response(response_text)
                 await read_task  # ensure read receipt fires before we reply
                 await self._flag_typing(original_message.chat.id, response_text)
                 sent = await original_message.reply_text(response_text)
@@ -206,6 +223,25 @@ class TelegramClient(Client):
             logger.warning(f"Failed to mark chat {chat_id} as read: {e}")
         if state := self._chats.get(chat_id):
             state.read_done = True
+
+    def _postprocess_response(self, text: str) -> str:
+        """Remove empty lines and introduce a small number of human-like typos."""
+        text = "\n".join(line for line in text.splitlines() if line.strip())
+
+        # Collect positions of all eligible words (alphabetic, length >= 4).
+        candidates = [(m.start(), m.group()) for m in re.finditer(r"\b[a-zA-Z]{4,}\b", text)]
+        if candidates:
+            # Roughly 1 typo per 40 words, at least 1, at most 3.
+            typo_count = min(max(1, len(candidates) // 40), 3)
+            chosen = random.sample(candidates, min(typo_count, len(candidates)))
+            # Replace from right to left so earlier positions stay valid.
+            chars = list(text)
+            for pos, word in sorted(chosen, key=lambda x: x[0], reverse=True):
+                typo = _make_typo(word)
+                chars[pos : pos + len(word)] = typo
+            text = "".join(chars)
+
+        return text
 
     async def _flag_typing(self, chat_id: int, response_text: str) -> None:
         """Show a typing indicator for a duration proportional to the response length."""

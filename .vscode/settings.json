@@ -35,8 +35,13 @@
       "tooltip": "Build backend (./nx build backend)"
     },
     {
-      "label": "$(play) run",
-      "task": "run",
+      "label": "$(play) backend",
+      "task": "backend",
+      "tooltip": "Serve backend (./nx serve backend)"
+    },
+    {
+      "label": "$(play) frontend",
+      "task": "frontend",
       "tooltip": "Serve backend (./nx serve backend)"
     }
   ]

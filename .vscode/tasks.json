@@ -26,9 +26,22 @@
       "problemMatcher": []
     },
     {
-      "label": "run",
+      "label": "backend",
       "type": "shell",
       "command": "./nx serve backend",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend",
+      "type": "shell",
+      "command": "./nx serve frontend",
       "group": "build",
       "isBackground": true,
       "presentation": {

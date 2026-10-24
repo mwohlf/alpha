@@ -51,37 +51,54 @@ npm install
 ./nx serve frontend
 ```
 
+**Test / lint:**
+```bash
+./nx test backend      # pytest (no tests yet)
+./nx test frontend     # vitest
+./nx lint backend      # ruff check
+./nx format backend    # ruff format
+```
+
 **Docker:**
 ```bash
 ./nx build_docker backend
-docker run -p 8000:8000 alpha-app
+docker run -p 8000:8000 --env-file .env alpha-app
 ```
+
+The image contains no env file, so configuration must be passed in (`--env-file` or `-e`). Paths such as `FRONTEND_DIR`, `LOGFILE` and `TELEGRAM_DATABASE_URL` are resolved inside the container (working directory `/app`).
 
 ## URLs
 
 | | |
 |---|---|
 | Frontend (proxied) | http://localhost:3000 |
-| Backend | http://localhost:8000 |
+| Backend (serves the built UI at `/app`) | http://localhost:8000 |
 
 ## Project Structure
 
+The backend is a Telegram userbot that auto-replies to incoming messages using a local Ollama model speaking as the active persona, plus an admin API and web UI.
+
 ### Backend (`backend/`)
 
-- **`main.py`** — FastAPI app, lifespan manager (starts/stops Telegram + Ollama), static file serving for the SPA, catch-all route for client-side routing
-- **`router.py`** — all API routes under `/api`; JWT auth via `verify_token`
-- **`config.py`** — pydantic-settings; reads `.env` then overrides with the file specified by `ENV_FILE` (defaults to `.env.prod`; dev uses `.env.dev`)
-- **`models.py`** — Pydantic request/response models
-- **`telegram/`** — Pyrogram client wrapper; `client_manager.py` manages lifecycle, `handlers.py` processes incoming messages, `message_store.py` is SQLAlchemy async storage
-- **`ollama/`** — httpx-based async Ollama client; `ollama_client.py` provides chat/generate/stream; `ollama/client/` is generated from `etc/ollama-service.yaml`
+- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
+- **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by `ENV_FILE` if set (`nx serve backend` sets `.env.dev`), then process env vars — later sources win, missing files are skipped
+- **`endpoints/`** — API routes mounted under `/api` by `api_router.py`: `auth.py` (login, JWT, `verify_token`), `chat.py` (direct chat with the model, incl. SSE streaming), `model.py` (list / pull / delete Ollama models), `persona.py` (list / create / update personas), `telegram.py` (status, stored messages, users); request/response models live in `data_models.py`
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`), `message_store.py` (stored Telegram messages), `persona_store.py` (personas, seeded from `personas/*.txt` when the table is empty)
+- **`personas/`** — persona system prompts used as seed data
+- **`telegram/`** — Pyrogram integration: `telegram_client_manager.py` (lifecycle, first-run auth), `telegram_client.py` (message handling, reply generation, human-like read/typing delays, post-processing), `chat_state.py` (coalesces rapid messages per chat and cancels superseded replies), `utils.py`
+- **`ollama/`** — `ollama_client_manager.py` (httpx-based Ollama client: models, chat, streaming), `prompt_handler.py` (builds the prompt from the active persona + history); `ollama/client/` is generated from `etc/ollama-service.yaml`
 
 ### Frontend (`frontend/src/`)
 
 - **`generated/`** — auto-generated axios client (orval) from the backend's OpenAPI spec; never edit by hand
-- **`store/`** — Zustand stores; each store instantiates `getAlphaAPI()` and wraps API calls with loading/error state
-- **`App.tsx`** — entry point
+- **`api.ts`** — the shared `api` client; adds the JWT bearer token and redirects to the login page on 401
+- **`store/`** — Zustand stores wrapping API calls with loading/error state
+- **`index.tsx`** — entry point; **`App.tsx`** — router (basename `/app`) with a public `/login` and auth-protected pages
+- **`pages/`** — `Model`, `Persona`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations), `Setup` and `Memory` (placeholders)
 
-The frontend API client is code-generated from the backend. When adding a new endpoint, add the route and Pydantic model to `router.py` / `models.py`, then run `./nx build frontend` to regenerate the client.
+The frontend API client is code-generated from the backend:
+`backend:build → backend:generate_openapi_yaml (etc/alpha-service.yaml) → frontend:generate (orval) → frontend:build`.
+When adding a new endpoint, add the route to a module in `backend/endpoints/` and its Pydantic models to `endpoints/data_models.py`, then run `./nx build frontend` to regenerate the client.
 
 ## CI
 
@@ -90,24 +107,35 @@ npm install
 ./nx build_docker backend
 ```
 
-## Telegram Setup
+## Configuration
 
-Telegram credentials go in `.env.dev`.
+Env files live at the workspace root: shared values in `.env`, dev overrides in `.env.dev` (both gitignored). Besides the Telegram settings below:
+
+- `SECRET_KEY` — JWT signing key, generate with `python -c "import secrets; print(secrets.token_hex(32))"`
+- `LOGIN_USERNAME` / `LOGIN_PASSWORD` — the single admin login for the web UI; the password may be plain text or a bcrypt hash (defaults are `admin`/`admin` — change them)
+- `OLLAMA_BASE_URL`, `OLLAMA_DEFAULT_MODEL` — Ollama server and the model used for Telegram replies
+- `TELEGRAM_DATABASE_URL` — async SQLAlchemy URL for messages and personas, e.g. `sqlite+aiosqlite:///./etc/telegram_messages.db`
+
+> **Note:** the database is currently dropped and recreated on every start, so stored messages and persona edits do not survive a restart (see `REVIEW.md`, C1).
+
+## Telegram Setup
 
 **API credentials** (`TELEGRAM_API_ID`, `TELEGRAM_API_HASH`):
 1. Go to https://my.telegram.org/apps
 2. Log in and create an application
-3. Copy the API ID and API Hash into `.env.dev`
+3. Copy the API ID and API Hash into `.env`
+
+Also set `TELEGRAM_SESSION_NAME` (any name, e.g. `alpha_userbot`); the client refuses to start without it.
 
 **Session string** (`TELEGRAM_SESSION_STRING`):
 
-If `TELEGRAM_SESSION_STRING` is left empty, the app will prompt for authentication interactively on first run — enter your phone number and the OTP sent to your Telegram app. The session string will be logged to stdout. Copy it into `.env.dev`:
+If `TELEGRAM_SESSION_STRING` is left empty, the app prompts for authentication interactively on startup — enter your phone number and the OTP sent to your Telegram app. This needs an interactive terminal, so run it locally (`./nx serve backend`), not in Docker. The session string is then logged (stdout and `log/alpha.log`). Copy it into your env file:
 
 ```
 TELEGRAM_SESSION_STRING=<paste here>
 ```
 
-This only needs to be done once. The session string authenticates the app without requiring login on subsequent starts.
+This only needs to be done once. The session string grants full access to the account: keep it secret, and delete it from the log file afterwards.
 
 ## Links
 

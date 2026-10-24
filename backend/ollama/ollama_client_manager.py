@@ -2,12 +2,16 @@
 Ollama client manager for managing LLM interactions.
 """
 
+import json
 import logging
 from typing import AsyncGenerator, Dict, List, Optional
 
 import httpx
 
 logger = logging.getLogger("alpha")
+
+# seconds without any progress from Ollama before a model pull is aborted
+PULL_STALL_TIMEOUT = 300.0
 
 
 class OllamaClientManager:
@@ -145,7 +149,10 @@ class OllamaClientManager:
 
     async def pull_model(self, name: str) -> None:
         """
-        Pull a model from the Ollama registry (non-streaming).
+        Pull a model from the Ollama registry and wait until it is complete.
+
+        Progress is streamed so there is no limit on the total duration; the pull only
+        times out if Ollama sends nothing for PULL_STALL_TIMEOUT seconds.
 
         Args:
             name: Model name to pull (e.g. "llama3:latest")
@@ -157,15 +164,40 @@ class OllamaClientManager:
             raise RuntimeError("Ollama client is not running")
 
         try:
-            response = await self._client.post(
+            async with self._client.stream(
+                "POST",
                 "/api/pull",
-                json={"name": name, "stream": False},
-                timeout=600.0,
-            )
-            response.raise_for_status()
+                json={"model": name, "stream": True},
+                timeout=httpx.Timeout(PULL_STALL_TIMEOUT, connect=5.0),
+            ) as response:
+                if response.is_error:
+                    await response.aread()
+                    response.raise_for_status()
+                last_status = None
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    progress = json.loads(line)
+                    # errors after the stream has started are reported in-band
+                    if "error" in progress:
+                        raise RuntimeError(progress["error"])
+                    status = progress.get("status")
+                    if status and status != last_status and not status.startswith("pulling "):
+                        logger.info(f"Pulling {name}: {status}")
+                    last_status = status
+                if last_status != "success":
+                    raise RuntimeError(f"pull ended without success (last status: {last_status})")
+            logger.info(f"Pulled model {name}")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Error pulling model {name}: {e.response.status_code} - {e.response.text}")
+            try:
+                detail = e.response.json().get("error", e.response.text)
+            except ValueError:
+                detail = e.response.text
+            raise RuntimeError(f"Failed to pull model: {detail}")
         except Exception as e:
-            logger.error(f"Error pulling model {name}: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to pull model: {e}")
+            logger.error(f"Error pulling model {name}: {e!r}", exc_info=True)
+            raise RuntimeError(f"Failed to pull model: {str(e) or type(e).__name__}")
 
     async def chat(
         self,
@@ -257,8 +289,6 @@ class OllamaClientManager:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:
-                        import json
-
                         try:
                             yield json.loads(line)
                         except json.JSONDecodeError:

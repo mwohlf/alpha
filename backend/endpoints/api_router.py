@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from endpoints.auth import router as auth_router
 from endpoints.chat import router as chat_router
+from endpoints.database import router as database_router
 from endpoints.model import router as model_router
 from endpoints.persona import router as persona_router
 from endpoints.telegram import router as telegram_router
@@ -12,3 +13,4 @@ router.include_router(model_router)
 router.include_router(telegram_router)
 router.include_router(chat_router)
 router.include_router(persona_router)
+router.include_router(database_router)

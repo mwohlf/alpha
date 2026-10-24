@@ -8,7 +8,7 @@ Alpha is a small, readable codebase (~2k lines of hand-written code) with a sens
 
 It is still a prototype, though, and some defects need fixing before anyone relies on it:
 
-1. **Every restart wipes the database.** That includes persona edits and all Telegram history.
+1. ~~**Every restart wipes the database.** That includes persona edits and all Telegram history.~~ ✅ Fixed: data now survives restarts and is reset only on schema changes.
 2. ~~**The bot sees the current message twice** in its prompt.~~ ✅ Fixed in `69dfac2`.
 3. **Insecure defaults.** The JWT secret is empty and the login is `admin`/`admin`, while the Docker image listens on `0.0.0.0`.
 4. **Secrets and private chats go to the log file.** This covers the Telegram session string and the full prompts.
@@ -17,7 +17,7 @@ It is still a prototype, though, and some defects need fixing before anyone reli
 | Area | Rating | Notes |
 |---|---|---|
 | Structure / readability | Good | Clear module split, small functions, consistent naming |
-| Correctness | Fair | Data loss on restart remains; prompt duplication and the listed edge-case bugs are fixed |
+| Correctness | Fair → Good | Data loss on restart, prompt duplication and the listed edge-case bugs are fixed |
 | Security | Poor (if exposed) | Forgeable JWTs by default, secrets in logs |
 | Ops / build | Fair | Nice Nx pipeline, but dead steps, bloated deps, stale README |
 | Tests | None | No backend or frontend tests exist |
@@ -26,7 +26,9 @@ It is still a prototype, though, and some defects need fixing before anyone reli
 
 ## Critical
 
-### C1. `init_db` drops all tables on every startup
+### C1. `init_db` drops all tables on every startup — ✅ Fixed
+
+> **Resolution:** `init_db` now stores a fingerprint of the models in a `schema_version` table. Tables are dropped and recreated only when that fingerprint changes; by design there are no migrations, so data is discarded on schema changes. A manual wipe is available as `POST /api/database/wipe` and on the Setup page. Note that on woodstock the SQLite file lives inside the container (`/app/etc`) with no volume, so redeploying the container still loses data.
 `backend/database/session.py:36-39`
 
 ```python
@@ -122,7 +124,7 @@ If `TELEGRAM_SESSION_STRING` is missing, `start()` runs Pyrogram's interactive p
 
 ## Medium
 
-- **No recovery when a dependency fails at startup.** If Ollama is unreachable at boot (`main.py:65-67`), `ollama_manager` stays `None` forever. The bot silently stops answering and the API returns 503 until a restart. Retry lazily in `get_ollama_manager`, or on a background timer.
+- ✅ **Fixed:** **No recovery when a dependency fails at startup.** If Ollama is unreachable at boot (`main.py:65-67`), `ollama_manager` stays `None` forever. The bot silently stops answering and the API returns 503 until a restart. Retry lazily in `get_ollama_manager`, or on a background timer.
 - ✅ **Fixed:** **`/api/*` typos return the SPA.** The catch-all at `main.py:190-194` also catches unknown `/api/...` paths and returns `index.html` with 200. Return a JSON 404 for anything under `/api`.
 - **Telegram read endpoints require a live client.** `/telegram/messages`, `/users` and `/users/{id}/messages` depend on `get_telegram_manager`, but they only read the DB. When Telegram is down you can't browse history either. Drop the dependency where it's unused.
 - ✅ **Fixed:** **`get_users` groups by name fields** (`message_store.py:147-152`). A user who changes their username or first name appears twice, which also gives duplicate React keys in `Conversation.tsx:46`. Group by `sender_id` only and take the latest name.
@@ -132,7 +134,7 @@ If `TELEGRAM_SESSION_STRING` is missing, `start()` runs Pyrogram's interactive p
 - **The "default model" in the UI is client-side only.** `Model.tsx` "Set as default" updates the browser's chat store and isn't persisted. The Telegram bot always uses `OLLAMA_DEFAULT_MODEL`. Either persist it server-side and use it for the bot, or relabel it as "Chat model".
 - **Missing config fails with an obscure error.** `TELEGRAM_DATABASE_URL` defaults to `""`, so `create_async_engine("")` fails with an unhelpful error. Give it a sane default such as `sqlite+aiosqlite:///./data/alpha.db`, and remove the unused `DATABASE_URL`, `OLLAMA_ENABLED` and `DEBUG` settings.
 - **Errors leak internal detail.** `str(e)` is returned to clients in `endpoints/telegram.py` and in the SSE stream (`chat.py:57`). That's low risk behind auth, but log the details and return a generic message instead.
-- **Model pulls block a request.** `pull_model` is a blocking request with a 600 s timeout (`ollama_client_manager.py:163`). Large models exceed that, and the HTTP request is held open the whole time. Stream progress, or make it a background job.
+- ✅ **Fixed (timeout):** **Model pulls block a request.** `pull_model` is a blocking request with a 600 s timeout (`ollama_client_manager.py:163`). Large models exceed that, and the HTTP request is held open the whole time. Stream progress, or make it a background job. _Now streamed: there's no total time limit, a stall aborts after 5 min, and errors Ollama reports partway through reach the UI. The HTTP request is still held open for the whole pull._
 
 ## Low / cleanup
 
@@ -186,7 +188,7 @@ A simple disclosure mechanism, or limiting the bot to consenting contacts, would
 ## Suggested order of work
 
 1. ~~C2, H1–H4, H7~~: ✅ done in `69dfac2`.
-2. C1 (drop_all), C3/C4 (secrets): small, high-impact changes.
+2. ~~C1~~ ✅ done. C3/C4 (secrets): small, high-impact changes.
 3. Add a pytest setup with the tests above, and make `nx test` / `nx lint` green (upgrade Ruff, exclude `ollama/client`). Tests 3 and 5 would lock in the `69dfac2` fixes.
 4. H5, H6: media downloads and interactive login.
 5. Trim the dependencies and fix the Dockerfile and CI.

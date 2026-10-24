@@ -77,7 +77,7 @@ When adding a new API endpoint:
 
 The app is a Telegram userbot that auto-replies to incoming messages using a local Ollama LLM speaking as the active persona, plus an admin API.
 
-- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
+- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram; if Ollama is unreachable it is retried every `OLLAMA_RETRY_SECONDS` in the background), SPA static serving at `/app`, catch-all route for client-side routing
 - **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by the `ENV_FILE` env var (resolved from the workspace root; `project.json` sets `.env.dev` for `serve`/`generate_openapi_yaml`), then process env vars — later sources win; missing files are skipped
 - **`endpoints/`** — API routes, all mounted under `/api` via `api_router.py`:
   - `auth.py` — `POST /auth/login` (single user from `LOGIN_USERNAME`/`LOGIN_PASSWORD`), JWT issuing, `verify_token` dependency
@@ -85,9 +85,10 @@ The app is a Telegram userbot that auto-replies to incoming messages using a loc
   - `model.py` — list / pull / delete Ollama models
   - `persona.py` — list / create / update personas
   - `telegram.py` — client status, stored messages, users, per-user message history
+  - `database.py` — `POST /database/wipe`: delete all rows, re-seed default personas
   - `data_models.py` — Pydantic request/response models
   - `dependencies.py` — `get_ollama_manager` / `get_telegram_manager` (read from `app.state`)
-- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `get_db_session`), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `seed_personas`, which seeds from `personas/*.txt` when the table is empty)
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `wipe_db`, `get_db_session`; `init_db` stores a fingerprint of the models in `schema_version` and drops/recreates all tables when it changes — there are no migrations, so changing a model discards existing data), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `seed_personas`, which seeds from `personas/*.txt` when the table is empty)
 - **`personas/`** — persona system prompts as `.txt` files (seed data only; the DB is the source of truth after first run)
 - **`telegram/`** — Pyrogram integration:
   - `telegram_client_manager.py` — lifecycle (start/stop)
@@ -102,9 +103,9 @@ Telegram and Ollama managers are stored on `app.state` and cross-linked (`telegr
 
 - **`generated/`** — auto-generated axios client (orval) from the OpenAPI spec; `endpoints.ts` exports `getAlphaAPI()`
 - **`api.ts`** — the single `api = getAlphaAPI(authAxios)` instance; the axios interceptor adds the JWT bearer token and redirects to `/app/login` on 401
-- **`store/`** — Zustand stores (with `devtools`) wrapping API calls with loading/error state: `useAuthStore`, `useChatStore`, `useModelsStore`, `usePersonaStore`, `useSessionsStore`
+- **`store/`** — Zustand stores (with `devtools`) wrapping API calls with loading/error state: `useAuthStore`, `useChatStore`, `useDatabaseStore`, `useModelsStore`, `usePersonaStore`, `useSessionsStore`
 - **`App.tsx`** — `BrowserRouter` with basename `/app`; public `/login`, everything else behind `RequireAuth` inside `components/Layout.tsx`
-- **`pages/`** — `Setup` (default route), `Model`, `Persona`, `Memory`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations per user)
+- **`pages/`** — `Setup` (default route; wipe database), `Model`, `Persona`, `Memory`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations per user)
 
 ### Environment / Config
 

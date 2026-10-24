@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from endpoints.auth import verify_token
 from endpoints.data_models import ModelDeleteResponse, ModelListGetResponse, OllamaModel
@@ -45,7 +45,10 @@ async def delete_model(
 async def add_model(
     name: str, ollama: OllamaClientManager = Depends(get_ollama_manager)
 ) -> OllamaModel:
-    await ollama.pull_model(name)
+    try:
+        await ollama.pull_model(name)
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
     models_data = await ollama.list_models()
     model = next((m for m in models_data if m.get("name") == name), None)
     return OllamaModel(**(model or {"name": name}))

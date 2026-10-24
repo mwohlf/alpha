@@ -154,3 +154,9 @@ class PersonaUpdateRequest(BaseModel):
     name: Optional[str] = None
     content: Optional[str] = None
     is_active: Optional[bool] = None
+
+
+class DatabaseWipeResponse(BaseModel):
+    """Rows deleted per table; default personas are re-seeded afterwards."""
+
+    deleted: dict[str, int]

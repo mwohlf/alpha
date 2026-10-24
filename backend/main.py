@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import logging.handlers
 import os
@@ -63,8 +64,16 @@ async def start_ollama(app: FastAPI):
             app.state.telegram_manager.client.ollama_manager = manager
 
     except Exception as e:
-        logger.error(f"Ollama start failed: {e}", exc_info=True)
+        logger.error(f"Ollama start failed: {e}")
         app.state.ollama_manager = None
+
+
+async def retry_ollama(app: FastAPI):
+    """Keep trying to start the Ollama client until it succeeds (e.g. network not ready at boot)."""
+    while getattr(app.state, "ollama_manager", None) is None:
+        logger.info(f"Retrying Ollama in {settings.OLLAMA_RETRY_SECONDS}s")
+        await asyncio.sleep(settings.OLLAMA_RETRY_SECONDS)
+        await start_ollama(app)
 
 
 async def stop_ollama(app: FastAPI):
@@ -121,9 +130,14 @@ async def lifespan(app: FastAPI):
     await seed_personas()
     await start_ollama(app)
     await start_telegram(app)
+    ollama_retry = None
+    if app.state.ollama_manager is None:
+        ollama_retry = asyncio.create_task(retry_ollama(app))
 
     yield
 
+    if ollama_retry:
+        ollama_retry.cancel()
     await stop_telegram(app)
     await stop_ollama(app)
     logger.info("Shutdown complete")

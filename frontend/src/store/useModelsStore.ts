@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { api } from "../api";
@@ -58,8 +59,12 @@ export const useModelsStore = create<ModelsState>()(
         set({ loading: true, error: null });
         try {
           await api.addModel({ name });
-        } catch {
-          set({ loading: false, error: "Failed to pull model." });
+        } catch (e) {
+          const detail = isAxiosError(e) ? e.response?.data?.detail : undefined;
+          set({
+            loading: false,
+            error: typeof detail === "string" ? detail : "Failed to pull model.",
+          });
           return;
         }
         await get().fetchModels();

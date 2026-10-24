@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     OLLAMA_DEFAULT_MODEL: str = "huihui_ai/dolphin3-abliterated:latest"
     # OLLAMA_DEFAULT_MODEL: str = "kiwi_kiwi/qwen3.5-9b-abliterated_en:latest"
     OLLAMA_ENABLED: bool = True
+    # retry interval when Ollama is unreachable at startup
+    OLLAMA_RETRY_SECONDS: int = 30
 
     # Database (when needed)
     DATABASE_URL: str = "sqlite:///./app.db"

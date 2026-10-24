@@ -82,8 +82,8 @@ The backend is a Telegram userbot that auto-replies to incoming messages using a
 
 - **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
 - **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by `ENV_FILE` if set (`nx serve backend` sets `.env.dev`), then process env vars — later sources win, missing files are skipped
-- **`endpoints/`** — API routes mounted under `/api` by `api_router.py`: `auth.py` (login, JWT, `verify_token`), `chat.py` (direct chat with the model, incl. SSE streaming), `model.py` (list / pull / delete Ollama models), `persona.py` (list / create / update personas), `telegram.py` (status, stored messages, users); request/response models live in `data_models.py`
-- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`), `message_store.py` (stored Telegram messages), `persona_store.py` (personas, seeded from `personas/*.txt` when the table is empty)
+- **`endpoints/`** — API routes mounted under `/api` by `api_router.py`: `auth.py` (login, JWT, `verify_token`), `chat.py` (direct chat with the model, incl. SSE streaming), `model.py` (list / pull / delete Ollama models), `persona.py` (list / create / update personas), `telegram.py` (status, stored messages, users), `database.py` (wipe all data); request/response models live in `data_models.py`
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db` — recreates the tables when the schema fingerprint changes, `wipe_db`), `message_store.py` (stored Telegram messages), `persona_store.py` (personas, seeded from `personas/*.txt` when the table is empty)
 - **`personas/`** — persona system prompts used as seed data
 - **`telegram/`** — Pyrogram integration: `telegram_client_manager.py` (lifecycle, first-run auth), `telegram_client.py` (message handling, reply generation, human-like read/typing delays, post-processing), `chat_state.py` (coalesces rapid messages per chat and cancels superseded replies), `utils.py`
 - **`ollama/`** — `ollama_client_manager.py` (httpx-based Ollama client: models, chat, streaming), `prompt_handler.py` (builds the prompt from the active persona + history); `ollama/client/` is generated from `etc/ollama-service.yaml`
@@ -94,7 +94,7 @@ The backend is a Telegram userbot that auto-replies to incoming messages using a
 - **`api.ts`** — the shared `api` client; adds the JWT bearer token and redirects to the login page on 401
 - **`store/`** — Zustand stores wrapping API calls with loading/error state
 - **`index.tsx`** — entry point; **`App.tsx`** — router (basename `/app`) with a public `/login` and auth-protected pages
-- **`pages/`** — `Model`, `Persona`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations), `Setup` and `Memory` (placeholders)
+- **`pages/`** — `Model`, `Persona`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations), `Setup` (wipe database), `Memory` (placeholder)
 
 The frontend API client is code-generated from the backend:
 `backend:build → backend:generate_openapi_yaml (etc/alpha-service.yaml) → frontend:generate (orval) → frontend:build`.
@@ -114,9 +114,12 @@ Env files live at the workspace root: shared values in `.env`, dev overrides in 
 - `SECRET_KEY` — JWT signing key, generate with `python -c "import secrets; print(secrets.token_hex(32))"`
 - `LOGIN_USERNAME` / `LOGIN_PASSWORD` — the single admin login for the web UI; the password may be plain text or a bcrypt hash (defaults are `admin`/`admin` — change them)
 - `OLLAMA_BASE_URL`, `OLLAMA_DEFAULT_MODEL` — Ollama server and the model used for Telegram replies
+- `OLLAMA_RETRY_SECONDS` — retry interval while Ollama is unreachable at startup
 - `TELEGRAM_DATABASE_URL` — async SQLAlchemy URL for messages and personas, e.g. `sqlite+aiosqlite:///./etc/telegram_messages.db`
 
-> **Note:** the database is currently dropped and recreated on every start, so stored messages and persona edits do not survive a restart (see `REVIEW.md`, C1).
+Data is kept across restarts. When the database schema changes (a model in `backend/database/` is modified), all existing data is discarded and the tables are recreated — there are no migrations. The **Setup** page has a button to wipe all data manually (default personas are restored afterwards).
+
+If Ollama is unreachable at startup, the backend retries every `OLLAMA_RETRY_SECONDS` (default 30).
 
 ## Telegram Setup
 

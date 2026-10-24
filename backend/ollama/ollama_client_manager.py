@@ -204,6 +204,7 @@ class OllamaClientManager:
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
         stream: bool = False,
+        format: Optional[Dict] = None,
         **options,
     ) -> Dict:
         """
@@ -213,6 +214,7 @@ class OllamaClientManager:
             messages: List of message dictionaries with 'role' and 'content'
             model: Model name to use (defaults to self.default_model)
             stream: Whether to stream the response
+            format: JSON schema the response must match (Ollama structured output)
             **options: Additional model options (temperature, top_p, etc.)
 
         Returns:
@@ -232,6 +234,8 @@ class OllamaClientManager:
             "stream": stream,
         }
 
+        if format:
+            payload["format"] = format
         if options:
             payload["options"] = options
 

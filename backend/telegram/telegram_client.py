@@ -14,13 +14,23 @@ from pyrogram.enums import ChatAction
 from pyrogram.types import Message
 
 from config import settings
+from database.memory_store import get_memory
 from database.message_store import add_message, get_chat_history
+from ollama.memory_handler import update_chat_memory
 from ollama.ollama_client_manager import OllamaClientManager
-from ollama.prompt_handler import create_prompt
+from ollama.prompt_handler import REPLY_SCHEMA, create_prompt, describe_message, parse_reply
 from telegram.chat_state import ChatState, PendingMessage
 from telegram.utils import get_message_type, should_respond_with_ai
 
 logger = logging.getLogger("alpha")
+
+
+def _sender_name(first_name: str | None, username: str | None) -> str:
+    return first_name or username or "Someone"
+
+
+def _is_group(chat) -> bool:
+    return bool(chat.type) and chat.type.value != "private"
 
 
 def _make_typo(word: str) -> str:
@@ -70,12 +80,9 @@ class TelegramClient(Client):
             await add_message(message_data)
             self._log_received(message_data)
 
-            if (
-                self.ollama_manager
-                and message_data["text"]
-                and should_respond_with_ai(message)
-            ):
-                await self._schedule_response(state, message, message_data["text"])
+            text = describe_message(message_data["message_type"], message_data["text"])
+            if self.ollama_manager and text and should_respond_with_ai(message):
+                await self._schedule_response(state, message, text)
 
         except Exception as ex:
             logger.error(f"Error handling message {message.id}: {ex}", exc_info=True)
@@ -94,12 +101,13 @@ class TelegramClient(Client):
 
         file_path = None
         if _media:
-            os.makedirs(settings.TELEGRAM_MEDIA_DIR, exist_ok=True)
-            downloaded = await self.download_media(
-                message, file_name=settings.TELEGRAM_MEDIA_DIR + "/"
-            )
+            # Pyrogram resolves relative paths against sys.argv[0], so pass an absolute one
+            media_dir = settings.media_path
+            os.makedirs(media_dir, exist_ok=True)
+            downloaded = await self.download_media(message, file_name=f"{media_dir}/")
             if downloaded:
-                file_path = downloaded
+                # stored relative to the media directory so it can be moved
+                file_path = os.path.relpath(downloaded, media_dir)
 
         return {
             "message_id": message.id,
@@ -144,7 +152,9 @@ class TelegramClient(Client):
         text: str,
     ) -> None:
         """Accumulate *text* and start a new coalesced response task, cancelling any prior one."""
-        state.add_pending(message.id, text)
+        user = message.from_user
+        sender = _sender_name(user.first_name, user.username) if user else None
+        state.add_pending(message.id, text, sender)
         await state.schedule_response(self._generate_and_send_response(message, state))
 
     async def _generate_and_send_response(
@@ -160,7 +170,11 @@ class TelegramClient(Client):
             answering = list(state.pending)
             if not answering:
                 return
-            combined_text = "\n\n".join(p.text for p in answering)
+            chat_id = original_message.chat.id
+            group = _is_group(original_message.chat)
+            combined_text = "\n\n".join(
+                f"{p.sender or 'Someone'}: {p.text}" if group else p.text for p in answering
+            )
             answering_ids = {p.message_id for p in answering}
 
             reply_context = (
@@ -170,26 +184,36 @@ class TelegramClient(Client):
             )
             # The pending messages are already stored; exclude them from the history
             # because they are sent as the new user turn.
-            prior_messages = await get_chat_history(
-                original_message.chat.id, limit=20 + len(answering_ids)
-            )
-            history = [
-                {
-                    "role": "assistant" if m.sender_id is None else "user",
-                    "content": m.text,
-                }
-                for m in prior_messages
-                if m.message_id not in answering_ids
-            ][-20:]
+            prior_messages = await get_chat_history(chat_id, limit=20 + len(answering_ids))
+            history = []
+            for m in prior_messages:
+                text = describe_message(m.message_type, m.text)
+                if not text or m.message_id in answering_ids:
+                    continue
+                if m.sender_id is None:
+                    history.append({"role": "assistant", "content": text})
+                elif group:
+                    name = _sender_name(m.first_name, m.username)
+                    history.append({"role": "user", "content": f"{name}: {text}"})
+                else:
+                    history.append({"role": "user", "content": text})
+            history = history[-20:]
+            memory = await get_memory(chat_id)
             messages = await create_prompt(
                 combined_text,
                 history=history,
                 reply_context=reply_context,
+                json_reply=True,
+                memory=memory.facts if memory else None,
+                group_chat=group,
             )
-            result = await self.ollama_manager.chat(messages=messages)
-            response_text = result.get("message", {}).get("content") or None
+            result = await self.ollama_manager.chat(messages=messages, format=REPLY_SCHEMA)
+            response_text = parse_reply(result.get("message", {}).get("content") or "")
             if response_text:
                 response_text = self._postprocess_response(response_text)
+            if not response_text:
+                logger.warning(f"Empty reply for chat {original_message.chat.id}, not sending")
+            else:
                 await state.wait_for_read()  # ensure read receipt fires before we reply
                 await self._flag_typing(original_message.chat.id, response_text)
                 state.commit_task = asyncio.create_task(
@@ -238,8 +262,21 @@ class TelegramClient(Client):
                     "reply_to_message_id": original_message.id,
                 }
             )
+            self._schedule_memory_update(state, sent.chat.id, _is_group(sent.chat))
         except Exception as ex:
             logger.error(f"Error sending response: {ex}", exc_info=True)
+
+    def _schedule_memory_update(self, state: ChatState, chat_id: int, group: bool) -> None:
+        """Refresh the chat's long-term memory in the background unless a refresh is running."""
+        if state.memory_task and not state.memory_task.done():
+            return
+        state.memory_task = asyncio.create_task(self._update_memory(chat_id, group))
+
+    async def _update_memory(self, chat_id: int, group: bool) -> None:
+        try:
+            await update_chat_memory(self.ollama_manager, chat_id, group)
+        except Exception as ex:
+            logger.error(f"Error updating memory for chat {chat_id}: {ex}", exc_info=True)
 
     async def _flag_read(self, chat_id: int, max_id: int, delay: float) -> None:
         """Mark messages as read after *delay* seconds and record that the read fired."""

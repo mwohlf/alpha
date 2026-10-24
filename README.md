@@ -62,10 +62,12 @@ npm install
 **Docker:**
 ```bash
 ./nx build_docker backend
-docker run -p 8000:8000 --env-file .env alpha-app
+docker run -p 8000:8000 --env-file .env -v alpha-data:/app/etc alpha-app
 ```
 
 The image contains no env file, so configuration must be passed in (`--env-file` or `-e`). Paths such as `FRONTEND_DIR`, `LOGFILE` and `TELEGRAM_DATABASE_URL` are resolved inside the container (working directory `/app`).
+
+Keep `TELEGRAM_DATABASE_URL` pointing into `/app/etc` (e.g. `sqlite+aiosqlite:///./etc/telegram_messages.db`) and mount the named volume as shown: without it, every new container starts with an empty database and stored messages and long-term memories are lost.
 
 ## URLs
 

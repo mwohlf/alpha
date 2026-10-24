@@ -8,6 +8,7 @@ class PendingMessage:
     """An incoming message that has not been answered yet."""
     message_id: int
     text: str
+    sender: str | None = None
 
 
 @dataclass
@@ -19,14 +20,16 @@ class ChatState:
     # send + store of a generated reply; never cancelled so a sent reply is always recorded
     commit_task: asyncio.Task | None = None
     pending: list[PendingMessage] = field(default_factory=list)
+    # background refresh of the chat's long-term memory
+    memory_task: asyncio.Task | None = None
 
     @property
     def read_delay(self) -> float:
         """Short delay if the previous read already fired, otherwise a human-like delay."""
         return random.uniform(0.5, 2.0) if self.read_done else random.uniform(2, 20)
 
-    def add_pending(self, message_id: int, text: str) -> None:
-        self.pending.append(PendingMessage(message_id, text))
+    def add_pending(self, message_id: int, text: str, sender: str | None = None) -> None:
+        self.pending.append(PendingMessage(message_id, text, sender))
 
     def mark_answered(self, answered: list[PendingMessage]) -> None:
         """Drop *answered* from the pending list, keeping anything that arrived since."""

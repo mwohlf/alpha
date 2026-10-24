@@ -16,6 +16,7 @@ from sqlalchemy import (
     Text,
     delete,
     func,
+    or_,
     select,
 )
 
@@ -167,7 +168,7 @@ async def get_users() -> List[dict]:
 async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessage]:
     """
     Return the most recent messages for a chat in chronological order,
-    excluding messages without text (media-only, etc.).
+    excluding empty text messages (media without a caption is included).
     """
     async with get_db_session() as session:
         try:
@@ -175,7 +176,7 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
                 select(TelegramMessage)
                 .where(
                     TelegramMessage.chat_id == chat_id,
-                    TelegramMessage.text.isnot(None),
+                    or_(TelegramMessage.text.isnot(None), TelegramMessage.message_type != "text"),
                 )
                 .order_by(TelegramMessage.date.desc(), TelegramMessage.id.desc())
                 .limit(limit)
@@ -185,6 +186,65 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
         except Exception as e:
             logger.error(f"Failed to query chat history for {chat_id}: {e}", exc_info=True)
             return []
+
+
+async def get_messages_since(chat_id: int, after_id: int, limit: int) -> List[TelegramMessage]:
+    """
+    Return up to *limit* text and media messages of a chat stored after row *after_id*, oldest first.
+    """
+    async with get_db_session() as session:
+        result = await session.execute(
+            select(TelegramMessage)
+            .where(
+                TelegramMessage.chat_id == chat_id,
+                TelegramMessage.id > after_id,
+                or_(TelegramMessage.text.isnot(None), TelegramMessage.message_type != "text"),
+            )
+            .order_by(TelegramMessage.id.asc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+
+async def get_media_messages(chat_id: int) -> List[TelegramMessage]:
+    """Return the downloaded media users sent in a chat, newest first."""
+    async with get_db_session() as session:
+        result = await session.execute(
+            select(TelegramMessage)
+            .where(
+                TelegramMessage.chat_id == chat_id,
+                TelegramMessage.sender_id.isnot(None),
+                TelegramMessage.file_path.isnot(None),
+            )
+            .order_by(TelegramMessage.date.desc(), TelegramMessage.id.desc())
+        )
+        return list(result.scalars().all())
+
+
+async def get_message(row_id: int) -> Optional[TelegramMessage]:
+    async with get_db_session() as session:
+        return await session.get(TelegramMessage, row_id)
+
+
+async def get_chats() -> List[dict]:
+    """Return every chat with its type and title, named after its most recent message."""
+    async with get_db_session() as session:
+        latest = (
+            select(func.max(TelegramMessage.id).label("latest_id"))
+            .group_by(TelegramMessage.chat_id)
+            .subquery()
+        )
+        result = await session.execute(
+            select(
+                TelegramMessage.chat_id,
+                TelegramMessage.chat_type,
+                TelegramMessage.chat_title,
+                TelegramMessage.date,
+            )
+            .join(latest, TelegramMessage.id == latest.c.latest_id)
+            .order_by(TelegramMessage.date.desc())
+        )
+        return [row._asdict() for row in result.all()]
 
 
 async def get_messages_by_user(sender_id: int, limit: int = 100) -> List[TelegramMessage]:

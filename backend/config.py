@@ -69,8 +69,19 @@ class Settings(BaseSettings):
     # Telegram Database
     TELEGRAM_DATABASE_URL: str = ""
 
-    # Telegram Media
-    TELEGRAM_MEDIA_DIR: str = "media"
+    # Telegram Media: received photos/videos/...; inside etc/ so the Docker volume keeps them
+    TELEGRAM_MEDIA_DIR: str = "etc/media"
+
+    # Long-term memory: refresh a chat's facts once this many new messages arrived
+    MEMORY_UPDATE_EVERY: int = 10
+    # most messages folded into the facts per refresh (older backlog is caught up later)
+    MEMORY_BATCH_SIZE: int = 60
+    MEMORY_MAX_FACTS: int = 25
+
+    @property
+    def media_path(self) -> Path:
+        """Absolute media directory (relative values are resolved from the working directory)."""
+        return Path(self.TELEGRAM_MEDIA_DIR).resolve()
 
     class Config:
         env_file = _ENV_FILES

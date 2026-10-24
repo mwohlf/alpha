@@ -160,3 +160,27 @@ class DatabaseWipeResponse(BaseModel):
     """Rows deleted per table; personas are re-synced from personas/*.txt afterwards."""
 
     deleted: dict[str, int]
+
+
+class ChatMemoryResponse(BaseModel):
+    """Long-term memory of a chat; facts is empty until something was remembered."""
+
+    chat_id: int
+    chat_type: str
+    title: Optional[str] = None
+    facts: str = Field("", description="One fact per line")
+    updated_at: Optional[datetime] = None
+
+
+class MediaItemResponse(BaseModel):
+    """A photo, video, ... a user sent; download it via GET /memory/media/{id}."""
+
+    id: int
+    message_type: str
+    caption: Optional[str] = None
+    sender: Optional[str] = None
+    date: datetime
+
+
+class ChatMemoryUpdateRequest(BaseModel):
+    facts: str = Field(..., description="One fact per line")

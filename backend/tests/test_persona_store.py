@@ -27,9 +27,9 @@ async def _state():
 
 
 async def test_creates_personas_from_files_and_activates_default(personas_dir):
-    _write(personas_dir, character1="one", character2="two")
+    _write(personas_dir, character1="one", cruel="two")
     await sync_personas()
-    assert await _state() == {"Character1": ("one", False), "Character2": ("two", True)}
+    assert await _state() == {"Character1": ("one", False), "Cruel": ("two", True)}
 
 
 async def test_new_file_is_added_on_next_sync(personas_dir):
@@ -52,8 +52,8 @@ async def test_directory_overrides_database_and_keeps_active(personas_dir):
 
 
 async def test_falls_back_to_first_persona_when_active_file_removed(personas_dir):
-    _write(personas_dir, character2="two", character3="three", character4="four")
+    _write(personas_dir, cruel="two", character3="three", character4="four")
     await sync_personas()
-    (personas_dir / "character2.txt").unlink()
+    (personas_dir / "cruel.txt").unlink()
     await sync_personas()
     assert await _state() == {"Character3": ("three", True), "Character4": ("four", False)}

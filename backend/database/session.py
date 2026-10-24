@@ -28,10 +28,11 @@ class SchemaVersion(Base):
     fingerprint = Column(String(64), nullable=False)
 
 
-def _schema_fingerprint() -> str:
-    """Hash of all tables, columns and indexes defined in the models."""
+def _schema_fingerprint(only: set[str] | None = None) -> str:
+    """Hash of all tables (or just the tables named in *only*), columns and indexes defined in the models."""
     parts = []
-    for table in sorted(Base.metadata.tables.values(), key=lambda t: t.name):
+    tables = [t for t in Base.metadata.tables.values() if only is None or t.name in only]
+    for table in sorted(tables, key=lambda t: t.name):
         parts.append(f"table {table.name}")
         for col in table.columns:
             parts.append(f"  col {col.name} {col.type} null={col.nullable} pk={col.primary_key}")
@@ -43,7 +44,8 @@ def _schema_fingerprint() -> str:
 def _sync_schema(conn) -> bool:
     """
     Create the schema, or drop and recreate everything if the models changed since the
-    database was created. Returns True if existing data was discarded.
+    database was created. Tables that were only added are created without touching the
+    existing ones. Returns True if existing data was discarded.
     """
     fingerprint = _schema_fingerprint()
     existing = MetaData()
@@ -52,6 +54,12 @@ def _sync_schema(conn) -> bool:
     stored = None
     if SchemaVersion.__tablename__ in existing.tables:
         stored = conn.execute(select(SchemaVersion.fingerprint)).scalar()
+
+    if existing.tables and stored != fingerprint and stored == _schema_fingerprint(set(existing.tables)):
+        # existing tables are unchanged, the models only gained new tables
+        Base.metadata.create_all(bind=conn)
+        conn.execute(SchemaVersion.__table__.update().values(fingerprint=fingerprint))
+        return False
 
     reset = bool(existing.tables) and stored != fingerprint
     if reset:

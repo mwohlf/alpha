@@ -30,5 +30,6 @@ etc/.telegram_sessions/alpha_userbot.session
 etc/alpha-service.yaml
 log/
 etc/telegram_messages.db
+etc/media/
 
 .remember

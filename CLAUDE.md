@@ -40,7 +40,7 @@ npm install
 ### Docker
 ```bash
 ./nx build_docker backend   # builds both frontend & backend, then docker image
-docker run -p 8000:8000 alpha-app
+docker run -p 8000:8000 --env-file .env -v alpha-data:/app/etc alpha-app   # named volume keeps the database
 ```
 
 ### Clean
@@ -85,17 +85,18 @@ The app is a Telegram userbot that auto-replies to incoming messages using a loc
   - `model.py` — list / pull / delete Ollama models
   - `persona.py` — list / create / update personas
   - `telegram.py` — client status, stored messages, users, per-user message history
-  - `database.py` — `POST /database/wipe`: delete all rows, re-sync personas from `personas/*.txt`
+  - `memory.py` — per-chat long-term memory: list, edit facts, refresh from chat now; list and download media users sent (files live in `TELEGRAM_MEDIA_DIR`, default `etc/media`, paths stored relative to it)
+  - `database.py` — `POST /database/wipe`: delete all rows and media files, re-sync personas from `personas/*.txt`
   - `data_models.py` — Pydantic request/response models
   - `dependencies.py` — `get_ollama_manager` / `get_telegram_manager` (read from `app.state`)
-- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `wipe_db`, `get_db_session`; `init_db` stores a fingerprint of the models in `schema_version` and drops/recreates all tables when it changes — there are no migrations, so changing a model discards existing data), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `sync_personas`, which on every startup makes the table match `personas/*.txt`: name = capitalized file stem, content refreshed, new files added, personas without a file deleted, active persona kept (else `Character2`))
-- **`personas/`** — persona system prompts as `.txt` files (source of truth on startup; edits made in the UI are overwritten on the next restart)
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `wipe_db`, `get_db_session`; `init_db` stores a fingerprint of the models in `schema_version`; new tables are simply created, but changing an existing model drops/recreates all tables — there are no migrations, so that discards existing data including long-term memory), `message_store.py` (`TelegramMessage`), `memory_store.py` (`ChatMemory`: per-chat long-term facts), `persona_store.py` (`Persona` + `sync_personas`, which on every startup makes the table match `personas/*.txt`: name = capitalized file stem, content refreshed, new files added, personas without a file deleted, active persona kept (else `Cruel`))
+- **`personas/`** — persona system prompts as `.txt` files, one per style (`cruel`, `regal`, `strict`, `mysterious`, `greedy`); the character is always named Dannie (source of truth on startup; edits made in the UI are overwritten on the next restart)
 - **`telegram/`** — Pyrogram integration:
   - `telegram_client_manager.py` — lifecycle (start/stop)
-  - `telegram_client.py` — `TelegramClient(Client)` subclass: handles incoming messages, stores them, generates replies via Ollama, simulates human behaviour (delayed read receipts, typing indicator scaled to reply length), post-processes replies (strip empty lines, inject typos)
+  - `telegram_client.py` — `TelegramClient(Client)` subclass: handles incoming messages, stores them, generates replies via Ollama, simulates human behaviour (delayed read receipts, typing indicator scaled to reply length), post-processes replies (strip empty lines, inject typos); the model cannot see media, so photos/videos reach it as text like `(sent a photo)` via `describe_message` in `prompt_handler.py` (locations/contacts are left out)
   - `chat_state.py` — per-chat `ChatState`: coalesces rapid consecutive messages into one input and cancels in-flight replies when new messages arrive
   - `utils.py` — `get_message_type`, `should_respond_with_ai`
-- **`ollama/`** — `ollama_client_manager.py` (httpx-based: list/pull/delete models, `chat`, `chat_stream`, `generate`), `prompt_handler.py` (`create_prompt` builds messages from the active persona + history); `ollama/client/` is generated from `etc/ollama-service.yaml`
+- **`ollama/`** — `ollama_client_manager.py` (httpx-based: list/pull/delete models, `chat`, `chat_stream`, `generate`), `prompt_handler.py` (`create_prompt` builds messages from the active persona, its examples as chat turns, the chat's memory + history; replies use structured output `{"notes", "reply"}` and only `reply` is sent), `memory_handler.py` (`update_chat_memory`: after a reply, folds every `MEMORY_UPDATE_EVERY` new messages into the chat's facts); `ollama/client/` is generated from `etc/ollama-service.yaml`
 
 Telegram and Ollama managers are stored on `app.state` and cross-linked (`telegram_manager.client.ollama_manager`). Both are started/stopped in the lifespan context manager.
 
@@ -103,9 +104,9 @@ Telegram and Ollama managers are stored on `app.state` and cross-linked (`telegr
 
 - **`generated/`** — auto-generated axios client (orval) from the OpenAPI spec; `endpoints.ts` exports `getAlphaAPI()`
 - **`api.ts`** — the single `api = getAlphaAPI(authAxios)` instance; the axios interceptor adds the JWT bearer token and redirects to `/app/login` on 401
-- **`store/`** — Zustand stores (with `devtools`) wrapping API calls with loading/error state: `useAuthStore`, `useChatStore`, `useDatabaseStore`, `useModelsStore`, `usePersonaStore`, `useSessionsStore`
+- **`store/`** — Zustand stores (with `devtools`) wrapping API calls with loading/error state: `useAuthStore`, `useChatStore`, `useDatabaseStore`, `useModelsStore`, `useMemoryStore`, `usePersonaStore`, `useSessionsStore`
 - **`App.tsx`** — `BrowserRouter` with basename `/app`; public `/login`, everything else behind `RequireAuth` inside `components/Layout.tsx`
-- **`pages/`** — `Setup` (default route; wipe database), `Model`, `Persona`, `Memory`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations per user)
+- **`pages/`** — `Setup` (default route; wipe database), `Model`, `Persona`, `Memory` (view/edit per-chat facts, open media users sent), `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations per user)
 
 ### Environment / Config
 

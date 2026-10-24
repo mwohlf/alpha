@@ -72,6 +72,10 @@ COPY --chown=appuser:appuser frontend/dist/ /app/frontend/dist/
 
 USER appuser
 
+# the SQLite database (messages, personas, long-term memory) lives here; mount a named
+# volume (-v alpha-data:/app/etc) so it survives container re-creation
+VOLUME ["/app/etc"]
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

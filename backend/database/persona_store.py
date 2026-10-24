@@ -20,7 +20,7 @@ def _load(filename: str) -> str:
     return (_PERSONAS_DIR / filename).read_text(encoding="utf-8")
 
 
-DEFAULT_SYSTEM_PROMPT = _load("character1.txt")
+DEFAULT_SYSTEM_PROMPT = _load("cruel.txt")
 
 
 class Persona(Base):
@@ -33,7 +33,7 @@ class Persona(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
-DEFAULT_ACTIVE_PERSONA = "Character2"
+DEFAULT_ACTIVE_PERSONA = "Cruel"
 
 
 async def sync_personas() -> None:

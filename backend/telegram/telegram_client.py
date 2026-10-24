@@ -17,7 +17,7 @@ from config import settings
 from database.message_store import add_message, get_chat_history
 from ollama.ollama_client_manager import OllamaClientManager
 from ollama.prompt_handler import create_prompt
-from telegram.chat_state import ChatState
+from telegram.chat_state import ChatState, PendingMessage
 from telegram.utils import get_message_type, should_respond_with_ai
 
 logger = logging.getLogger("alpha")
@@ -61,7 +61,12 @@ class TelegramClient(Client):
             chat_id = message_data["chat_id"]
             state = self._chats.setdefault(chat_id, ChatState())
 
-            self._schedule_read(state, chat_id, message.id)
+            if message.outgoing:
+                # The account owner answered manually — drop any pending AI reply.
+                state.pending.clear()
+                await state.cancel_response()
+            else:
+                self._schedule_read(state, chat_id, message.id)
             await add_message(message_data)
             self._log_received(message_data)
 
@@ -139,38 +144,43 @@ class TelegramClient(Client):
         text: str,
     ) -> None:
         """Accumulate *text* and start a new coalesced response task, cancelling any prior one."""
-        state.pending_texts.append(text)
-
-        def _on_success(t: asyncio.Task, s: ChatState = state) -> None:
-            if not t.cancelled() and t.exception() is None:
-                s.pending_texts.clear()
-
-        await state.schedule_response(
-            self._generate_and_send_response(message, state.combined_text, state.read_task),
-            _on_success,
-        )
+        state.add_pending(message.id, text)
+        await state.schedule_response(self._generate_and_send_response(message, state))
 
     async def _generate_and_send_response(
         self,
         original_message: Message,
-        combined_text: str,
-        read_task: asyncio.Task,
+        state: ChatState,
     ) -> None:
-        """Generate an Ollama response for the combined message text and send it."""
+        """Generate an Ollama response for all pending message texts and send it."""
         try:
+            # A reply from a superseded task may still be sending; let it finish first so
+            # we don't answer the same messages again.
+            await state.wait_for_commit()
+            answering = list(state.pending)
+            if not answering:
+                return
+            combined_text = "\n\n".join(p.text for p in answering)
+            answering_ids = {p.message_id for p in answering}
+
             reply_context = (
                 original_message.reply_to_message.text
                 if original_message.reply_to_message
                 else None
             )
-            prior_messages = await get_chat_history(original_message.chat.id, limit=20)
+            # The pending messages are already stored; exclude them from the history
+            # because they are sent as the new user turn.
+            prior_messages = await get_chat_history(
+                original_message.chat.id, limit=20 + len(answering_ids)
+            )
             history = [
                 {
                     "role": "assistant" if m.sender_id is None else "user",
                     "content": m.text,
                 }
                 for m in prior_messages
-            ]
+                if m.message_id not in answering_ids
+            ][-20:]
             messages = await create_prompt(
                 combined_text,
                 history=history,
@@ -180,30 +190,12 @@ class TelegramClient(Client):
             response_text = result.get("message", {}).get("content") or None
             if response_text:
                 response_text = self._postprocess_response(response_text)
-                await read_task  # ensure read receipt fires before we reply
+                await state.wait_for_read()  # ensure read receipt fires before we reply
                 await self._flag_typing(original_message.chat.id, response_text)
-                sent = await original_message.reply_text(response_text)
-                logger.info(f"Sent response: {response_text[:50]}...")
-                await add_message(
-                    {
-                        "message_id": sent.id,
-                        "chat_id": sent.chat.id,
-                        "chat_title": getattr(sent.chat, "title", None)
-                        or getattr(sent.chat, "first_name", "Private Chat"),
-                        "chat_type": sent.chat.type.value
-                        if sent.chat.type
-                        else "unknown",
-                        "sender_id": None,
-                        "receiver_id": sent.chat.id,
-                        "username": None,
-                        "first_name": None,
-                        "last_name": None,
-                        "text": response_text,
-                        "message_type": "text",
-                        "date": sent.date if sent.date else datetime.now(UTC),
-                        "reply_to_message_id": original_message.id,
-                    }
+                state.commit_task = asyncio.create_task(
+                    self._send_and_store(original_message, response_text, answering, state)
                 )
+                await state.wait_for_commit()
 
         except asyncio.CancelledError:
             logger.info(
@@ -213,6 +205,41 @@ class TelegramClient(Client):
             raise
         except Exception as ex:
             logger.error(f"Error generating response: {ex}", exc_info=True)
+
+    async def _send_and_store(
+        self,
+        original_message: Message,
+        response_text: str,
+        answering: list[PendingMessage],
+        state: ChatState,
+    ) -> None:
+        """Send the reply and record it. Runs shielded so cancellation can't split send from store."""
+        try:
+            sent = await original_message.reply_text(response_text)
+            state.mark_answered(answering)
+            logger.info(f"Sent response: {response_text[:50]}...")
+            await add_message(
+                {
+                    "message_id": sent.id,
+                    "chat_id": sent.chat.id,
+                    "chat_title": getattr(sent.chat, "title", None)
+                    or getattr(sent.chat, "first_name", "Private Chat"),
+                    "chat_type": sent.chat.type.value
+                    if sent.chat.type
+                    else "unknown",
+                    "sender_id": None,
+                    "receiver_id": sent.chat.id,
+                    "username": None,
+                    "first_name": None,
+                    "last_name": None,
+                    "text": response_text,
+                    "message_type": "text",
+                    "date": sent.date if sent.date else datetime.now(UTC),
+                    "reply_to_message_id": original_message.id,
+                }
+            )
+        except Exception as ex:
+            logger.error(f"Error sending response: {ex}", exc_info=True)
 
     async def _flag_read(self, chat_id: int, max_id: int, delay: float) -> None:
         """Mark messages as read after *delay* seconds and record that the read fired."""
@@ -246,7 +273,7 @@ class TelegramClient(Client):
     async def _flag_typing(self, chat_id: int, response_text: str) -> None:
         """Show a typing indicator for a duration proportional to the response length."""
         word_count = len(response_text.split())
-        # ~0.2 s per word, 1.5 s baseline, capped at 12 s
+        # ~0.9 s per word, 1.5 s baseline, capped at 12 s
         typing_seconds = min(1.5 + word_count * 0.9, 12.0)
         elapsed = 0.0
         while elapsed < typing_seconds:

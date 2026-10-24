@@ -2,7 +2,11 @@
 Telegram message utility functions.
 """
 
+import re
+
 from pyrogram.types import Message
+
+_TRIGGER_WORDS = re.compile(r"\b(bot|ai|help)\b", re.IGNORECASE)
 
 
 def get_message_type(message: Message) -> str:
@@ -39,8 +43,6 @@ def should_respond_with_ai(message: Message) -> bool:
         return True
     if message.reply_to_message and message.reply_to_message.outgoing:
         return True
-    if message.text:
-        text_lower = message.text.lower()
-        if any(kw in text_lower for kw in ["bot", "ai", "help"]):
-            return True
+    if message.text and _TRIGGER_WORDS.search(message.text):
+        return True
     return False

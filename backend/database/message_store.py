@@ -96,7 +96,7 @@ async def get_recent_messages(
         try:
             query = (
                 select(TelegramMessage)
-                .order_by(TelegramMessage.date.desc())
+                .order_by(TelegramMessage.date.desc(), TelegramMessage.id.desc())
                 .limit(limit)
             )
 
@@ -131,26 +131,31 @@ async def get_message_count() -> int:
 
 async def get_users() -> List[dict]:
     """
-    Return distinct senders with their incoming message counts.
+    Return distinct senders with their incoming message counts, named after
+    their most recent message (users may change their name over time).
     """
     async with get_db_session() as session:
         try:
-            query = (
+            per_sender = (
                 select(
                     TelegramMessage.sender_id,
-                    TelegramMessage.username,
-                    TelegramMessage.first_name,
-                    TelegramMessage.last_name,
                     func.count(TelegramMessage.id).label("message_count"),
+                    func.max(TelegramMessage.id).label("latest_id"),
                 )
                 .where(TelegramMessage.sender_id.isnot(None))
-                .group_by(
-                    TelegramMessage.sender_id,
+                .group_by(TelegramMessage.sender_id)
+                .subquery()
+            )
+            query = (
+                select(
+                    per_sender.c.sender_id,
                     TelegramMessage.username,
                     TelegramMessage.first_name,
                     TelegramMessage.last_name,
+                    per_sender.c.message_count,
                 )
-                .order_by(func.count(TelegramMessage.id).desc())
+                .join(TelegramMessage, TelegramMessage.id == per_sender.c.latest_id)
+                .order_by(per_sender.c.message_count.desc())
             )
             result = await session.execute(query)
             return [row._asdict() for row in result.all()]
@@ -172,7 +177,7 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
                     TelegramMessage.chat_id == chat_id,
                     TelegramMessage.text.isnot(None),
                 )
-                .order_by(TelegramMessage.date.desc())
+                .order_by(TelegramMessage.date.desc(), TelegramMessage.id.desc())
                 .limit(limit)
             )
             messages = result.scalars().all()
@@ -184,7 +189,8 @@ async def get_chat_history(chat_id: int, limit: int = 20) -> List[TelegramMessag
 
 async def get_messages_by_user(sender_id: int, limit: int = 100) -> List[TelegramMessage]:
     """
-    Return all messages in chats where the sender has participated (both directions).
+    Return the most recent messages, in chronological order, from chats where the
+    sender has participated (both directions).
     """
     async with get_db_session() as session:
         try:
@@ -197,11 +203,11 @@ async def get_messages_by_user(sender_id: int, limit: int = 100) -> List[Telegra
             query = (
                 select(TelegramMessage)
                 .where(TelegramMessage.chat_id.in_(chats_subquery))
-                .order_by(TelegramMessage.date.asc())
+                .order_by(TelegramMessage.date.desc(), TelegramMessage.id.desc())
                 .limit(limit)
             )
             result = await session.execute(query)
-            return list(result.scalars().all())
+            return list(reversed(result.scalars().all()))
         except Exception as e:
             logger.error(f"Failed to query messages for sender {sender_id}: {e}", exc_info=True)
             raise

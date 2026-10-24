@@ -24,7 +24,7 @@ async def get_model_list(
 
 
 @router.delete(
-    "/delete/{name}",
+    "/delete/{name:path}",
     summary="Delete a local model",
     response_model=ModelDeleteResponse,
     operation_id="delete_model",

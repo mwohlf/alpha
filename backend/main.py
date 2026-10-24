@@ -189,6 +189,8 @@ async def serve_index_file():
 
 @app.get("/{skip_path:path}", include_in_schema=False)
 async def catch_all(request: Request, skip_path: str):
+    if skip_path == "api" or skip_path.startswith("api/"):  # Unknown API route
+        raise HTTPException(status_code=404)
     if "." in skip_path:  # Likely a missing asset file
         raise HTTPException(status_code=404)
     return await _get_index()

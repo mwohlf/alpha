@@ -33,20 +33,40 @@ class Persona(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
-async def seed_personas() -> None:
-    """Insert the default personas if no personas exist yet."""
+DEFAULT_ACTIVE_PERSONA = "Character2"
+
+
+async def sync_personas() -> None:
+    """Make the personas table match personas/*.txt (persona name = capitalized file stem).
+
+    Existing personas get their content refreshed, new files create personas and
+    personas without a file are deleted. The active persona is kept if it still
+    exists, otherwise DEFAULT_ACTIVE_PERSONA (or the first persona) is activated.
+    """
+    files = {p.stem.capitalize(): p.read_text(encoding="utf-8") for p in sorted(_PERSONAS_DIR.glob("*.txt"))}
     async with get_db_session() as session:
-        result = await session.execute(select(Persona).limit(1))
-        if result.scalar() is None:
-            session.add_all([
-                Persona(name="Character1", content=_load("character1.txt"), is_active=False),
-                Persona(name="Character2", content=_load("character2.txt"), is_active=True),
-                Persona(name="Character3", content=_load("character3.txt"), is_active=False),
-                Persona(name="Character4", content=_load("character4.txt"), is_active=False),
-                Persona(name="Character5", content=_load("character5.txt"), is_active=False),
-            ])
-            await session.commit()
-            logger.info("Seeded default personas")
+        result = await session.execute(select(Persona).order_by(Persona.id.asc()))
+        existing = {p.name: p for p in result.scalars().all()}
+
+        for name, persona in existing.items():
+            if name not in files:
+                await session.delete(persona)
+                logger.info(f"Removed persona {name} (no file)")
+        for name, content in files.items():
+            if name in existing:
+                existing[name].content = content
+            else:
+                session.add(Persona(name=name, content=content, is_active=False))
+                logger.info(f"Added persona {name}")
+        await session.flush()
+
+        result = await session.execute(select(Persona).order_by(Persona.id.asc()))
+        personas = list(result.scalars().all())
+        if personas and not any(p.is_active for p in personas):
+            default = next((p for p in personas if p.name == DEFAULT_ACTIVE_PERSONA), personas[0])
+            default.is_active = True
+        await session.commit()
+        logger.info(f"Synced {len(personas)} personas from {_PERSONAS_DIR}")
 
 
 async def get_personas() -> List[Persona]:

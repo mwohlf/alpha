@@ -157,6 +157,6 @@ class PersonaUpdateRequest(BaseModel):
 
 
 class DatabaseWipeResponse(BaseModel):
-    """Rows deleted per table; default personas are re-seeded afterwards."""
+    """Rows deleted per table; personas are re-synced from personas/*.txt afterwards."""
 
     deleted: dict[str, int]

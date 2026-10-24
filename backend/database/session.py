@@ -5,10 +5,11 @@ Database engine, session management, and schema initialization.
 import hashlib
 import logging
 
-from config import settings
 from sqlalchemy import Column, Integer, MetaData, String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+
+from config import settings
 
 logger = logging.getLogger("alpha")
 

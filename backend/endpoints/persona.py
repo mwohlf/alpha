@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from database.persona_store import create_persona, get_personas, update_persona
 from endpoints.auth import verify_token
 from endpoints.data_models import PersonaCreateRequest, PersonaResponse, PersonaUpdateRequest
-from database.persona_store import create_persona, get_personas, update_persona
 
 router = APIRouter(
     prefix="/persona", tags=["persona"], dependencies=[Depends(verify_token)]

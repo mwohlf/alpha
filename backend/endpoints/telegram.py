@@ -1,14 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from endpoints.auth import verify_token
-from endpoints.dependencies import get_telegram_manager
-from endpoints.data_models import (
-    TelegramChatInfo,
-    TelegramClearResponse,
-    TelegramMessageResponse,
-    TelegramStatusResponse,
-    TelegramUserSummary,
-)
 from database.message_store import (
     clear_messages,
     get_message_count,
@@ -16,6 +7,15 @@ from database.message_store import (
     get_recent_messages,
     get_users,
 )
+from endpoints.auth import verify_token
+from endpoints.data_models import (
+    TelegramChatInfo,
+    TelegramClearResponse,
+    TelegramMessageResponse,
+    TelegramStatusResponse,
+    TelegramUserSummary,
+)
+from endpoints.dependencies import get_telegram_manager
 
 router = APIRouter(
     prefix="/telegram", tags=["telegram"], dependencies=[Depends(verify_token)]

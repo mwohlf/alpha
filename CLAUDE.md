@@ -77,7 +77,7 @@ When adding a new API endpoint:
 
 The app is a Telegram userbot that auto-replies to incoming messages using a local Ollama LLM speaking as the active persona, plus an admin API.
 
-- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram; if Ollama is unreachable it is retried every `OLLAMA_RETRY_SECONDS` in the background), SPA static serving at `/app`, catch-all route for client-side routing
+- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `sync_personas` → start Ollama → start Telegram; if Ollama is unreachable it is retried every `OLLAMA_RETRY_SECONDS` in the background), SPA static serving at `/app`, catch-all route for client-side routing
 - **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by the `ENV_FILE` env var (resolved from the workspace root; `project.json` sets `.env.dev` for `serve`/`generate_openapi_yaml`), then process env vars — later sources win; missing files are skipped
 - **`endpoints/`** — API routes, all mounted under `/api` via `api_router.py`:
   - `auth.py` — `POST /auth/login` (single user from `LOGIN_USERNAME`/`LOGIN_PASSWORD`), JWT issuing, `verify_token` dependency
@@ -85,11 +85,11 @@ The app is a Telegram userbot that auto-replies to incoming messages using a loc
   - `model.py` — list / pull / delete Ollama models
   - `persona.py` — list / create / update personas
   - `telegram.py` — client status, stored messages, users, per-user message history
-  - `database.py` — `POST /database/wipe`: delete all rows, re-seed default personas
+  - `database.py` — `POST /database/wipe`: delete all rows, re-sync personas from `personas/*.txt`
   - `data_models.py` — Pydantic request/response models
   - `dependencies.py` — `get_ollama_manager` / `get_telegram_manager` (read from `app.state`)
-- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `wipe_db`, `get_db_session`; `init_db` stores a fingerprint of the models in `schema_version` and drops/recreates all tables when it changes — there are no migrations, so changing a model discards existing data), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `seed_personas`, which seeds from `personas/*.txt` when the table is empty)
-- **`personas/`** — persona system prompts as `.txt` files (seed data only; the DB is the source of truth after first run)
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `wipe_db`, `get_db_session`; `init_db` stores a fingerprint of the models in `schema_version` and drops/recreates all tables when it changes — there are no migrations, so changing a model discards existing data), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `sync_personas`, which on every startup makes the table match `personas/*.txt`: name = capitalized file stem, content refreshed, new files added, personas without a file deleted, active persona kept (else `Character2`))
+- **`personas/`** — persona system prompts as `.txt` files (source of truth on startup; edits made in the UI are overwritten on the next restart)
 - **`telegram/`** — Pyrogram integration:
   - `telegram_client_manager.py` — lifecycle (start/stop)
   - `telegram_client.py` — `TelegramClient(Client)` subclass: handles incoming messages, stores them, generates replies via Ollama, simulates human behaviour (delayed read receipts, typing indicator scaled to reply length), post-processes replies (strip empty lines, inject typos)

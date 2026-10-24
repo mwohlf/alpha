@@ -80,11 +80,11 @@ The backend is a Telegram userbot that auto-replies to incoming messages using a
 
 ### Backend (`backend/`)
 
-- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
+- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `sync_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
 - **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by `ENV_FILE` if set (`nx serve backend` sets `.env.dev`), then process env vars — later sources win, missing files are skipped
 - **`endpoints/`** — API routes mounted under `/api` by `api_router.py`: `auth.py` (login, JWT, `verify_token`), `chat.py` (direct chat with the model, incl. SSE streaming), `model.py` (list / pull / delete Ollama models), `persona.py` (list / create / update personas), `telegram.py` (status, stored messages, users), `database.py` (wipe all data); request/response models live in `data_models.py`
-- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db` — recreates the tables when the schema fingerprint changes, `wipe_db`), `message_store.py` (stored Telegram messages), `persona_store.py` (personas, seeded from `personas/*.txt` when the table is empty)
-- **`personas/`** — persona system prompts used as seed data
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db` — recreates the tables when the schema fingerprint changes, `wipe_db`), `message_store.py` (stored Telegram messages), `persona_store.py` (personas, synced from `personas/*.txt` on every startup)
+- **`personas/`** — persona system prompts, one `.txt` per persona; the source of truth on startup (UI edits last until the next restart)
 - **`telegram/`** — Pyrogram integration: `telegram_client_manager.py` (lifecycle, first-run auth), `telegram_client.py` (message handling, reply generation, human-like read/typing delays, post-processing), `chat_state.py` (coalesces rapid messages per chat and cancels superseded replies), `utils.py`
 - **`ollama/`** — `ollama_client_manager.py` (httpx-based Ollama client: models, chat, streaming), `prompt_handler.py` (builds the prompt from the active persona + history); `ollama/client/` is generated from `etc/ollama-service.yaml`
 
@@ -117,11 +117,13 @@ Env files live at the workspace root: shared values in `.env`, dev overrides in 
 - `OLLAMA_RETRY_SECONDS` — retry interval while Ollama is unreachable at startup
 - `TELEGRAM_DATABASE_URL` — async SQLAlchemy URL for messages and personas, e.g. `sqlite+aiosqlite:///./etc/telegram_messages.db`
 
-Data is kept across restarts. When the database schema changes (a model in `backend/database/` is modified), all existing data is discarded and the tables are recreated — there are no migrations. The **Setup** page has a button to wipe all data manually (default personas are restored afterwards).
+Data is kept across restarts. When the database schema changes (a model in `backend/database/` is modified), all existing data is discarded and the tables are recreated — there are no migrations. The **Setup** page has a button to wipe all data manually (personas are restored from `backend/personas/` afterwards).
 
 If Ollama is unreachable at startup, the backend retries every `OLLAMA_RETRY_SECONDS` (default 30).
 
 ## Telegram Setup
+
+The userbot currently runs on the Telegram account [@danie_horton](https://t.me/danie_horton).
 
 **API credentials** (`TELEGRAM_API_ID`, `TELEGRAM_API_HASH`):
 1. Go to https://my.telegram.org/apps

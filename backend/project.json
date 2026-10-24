@@ -93,7 +93,7 @@
       "dependsOn": ["build"],
       "outputs": ["{workspaceRoot}/coverage/backend"],
       "options": {
-        "command": "pytest",
+        "command": "./.venv/bin/pytest",
         "cwd": "{projectRoot}"
       }
     },

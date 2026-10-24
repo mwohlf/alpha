@@ -69,32 +69,51 @@ backend:generate_venv
 **Never hand-edit** `frontend/src/generated/` or `etc/alpha-service.yaml` — they are generated outputs.
 
 When adding a new API endpoint:
-1. Add the route + Pydantic model to `backend/router.py` / `backend/models.py`
+1. Add the route to the matching module in `backend/endpoints/` (or a new module registered in `endpoints/api_router.py`) and its Pydantic models to `backend/endpoints/data_models.py`; protect it with `Depends(verify_token)` from `endpoints/auth.py`
 2. Run `./nx build frontend` to regenerate `etc/alpha-service.yaml` and `frontend/src/generated/`
-3. Use the generated `getAlphaAPI()` client in frontend stores (see `frontend/src/store/useHelloStore.ts` for the pattern)
+3. Call it through the shared `api` client from `frontend/src/api.ts` in a Zustand store (see `frontend/src/store/usePersonaStore.ts` for the pattern)
 
 ### Backend (`backend/`)
 
-- **`main.py`** — FastAPI app, lifespan manager (starts/stops Telegram + Ollama), static file serving for the SPA, catch-all route for client-side routing
-- **`router.py`** — all API routes under `/api`; JWT auth via `verify_token`
-- **`config.py`** — pydantic-settings; reads `.env` then overrides with the file specified by `ENV_FILE` env var (defaults to `.env.prod`; dev uses `.env.dev`)
-- **`models.py`** — Pydantic request/response models
-- **`telegram/`** — Pyrogram client wrapper; `client_manager.py` manages lifecycle, `handlers.py` processes incoming messages, `message_store.py` is SQLAlchemy async storage
-- **`ollama/`** — httpx-based async Ollama client; `ollama_client.py` provides chat/generate/stream; `ollama/client/` is generated from `etc/ollama-service.yaml`
+The app is a Telegram userbot that auto-replies to incoming messages using a local Ollama LLM speaking as the active persona, plus an admin API.
 
-Telegram and Ollama managers are stored on `app.state` and cross-linked (Telegram handler can call Ollama). Both are started/stopped in the lifespan context manager.
+- **`main.py`** — FastAPI app, logging setup, lifespan manager (`init_db` → `seed_personas` → start Ollama → start Telegram), SPA static serving at `/app`, catch-all route for client-side routing
+- **`config.py`** — pydantic-settings; loads `<workspace root>/.env`, then the file named by the `ENV_FILE` env var (resolved from the workspace root; `project.json` sets `.env.dev` for `serve`/`generate_openapi_yaml`), then process env vars — later sources win; missing files are skipped
+- **`endpoints/`** — API routes, all mounted under `/api` via `api_router.py`:
+  - `auth.py` — `POST /auth/login` (single user from `LOGIN_USERNAME`/`LOGIN_PASSWORD`), JWT issuing, `verify_token` dependency
+  - `chat.py` — direct chat with the model (`/message`, streaming `/stream`)
+  - `model.py` — list / pull / delete Ollama models
+  - `persona.py` — list / create / update personas
+  - `telegram.py` — client status, stored messages, users, per-user message history
+  - `data_models.py` — Pydantic request/response models
+  - `dependencies.py` — `get_ollama_manager` / `get_telegram_manager` (read from `app.state`)
+- **`database/`** — SQLAlchemy async: `session.py` (engine, `init_db`, `get_db_session`), `message_store.py` (`TelegramMessage`), `persona_store.py` (`Persona` + `seed_personas`, which seeds from `personas/*.txt` when the table is empty)
+- **`personas/`** — persona system prompts as `.txt` files (seed data only; the DB is the source of truth after first run)
+- **`telegram/`** — Pyrogram integration:
+  - `telegram_client_manager.py` — lifecycle (start/stop)
+  - `telegram_client.py` — `TelegramClient(Client)` subclass: handles incoming messages, stores them, generates replies via Ollama, simulates human behaviour (delayed read receipts, typing indicator scaled to reply length), post-processes replies (strip empty lines, inject typos)
+  - `chat_state.py` — per-chat `ChatState`: coalesces rapid consecutive messages into one input and cancels in-flight replies when new messages arrive
+  - `utils.py` — `get_message_type`, `should_respond_with_ai`
+- **`ollama/`** — `ollama_client_manager.py` (httpx-based: list/pull/delete models, `chat`, `chat_stream`, `generate`), `prompt_handler.py` (`create_prompt` builds messages from the active persona + history); `ollama/client/` is generated from `etc/ollama-service.yaml`
+
+Telegram and Ollama managers are stored on `app.state` and cross-linked (`telegram_manager.client.ollama_manager`). Both are started/stopped in the lifespan context manager.
 
 ### Frontend (`frontend/src/`)
 
 - **`generated/`** — auto-generated axios client (orval) from the OpenAPI spec; `endpoints.ts` exports `getAlphaAPI()`
-- **`store/`** — Zustand stores; each store instantiates `getAlphaAPI()` and wraps API calls with loading/error state
-- **`App.tsx`** — minimal entry point currently
+- **`api.ts`** — the single `api = getAlphaAPI(authAxios)` instance; the axios interceptor adds the JWT bearer token and redirects to `/app/login` on 401
+- **`store/`** — Zustand stores (with `devtools`) wrapping API calls with loading/error state: `useAuthStore`, `useChatStore`, `useModelsStore`, `usePersonaStore`, `useSessionsStore`
+- **`App.tsx`** — `BrowserRouter` with basename `/app`; public `/login`, everything else behind `RequireAuth` inside `components/Layout.tsx`
+- **`pages/`** — `Setup` (default route), `Model`, `Persona`, `Memory`, `Chat` (talk to the model directly), `Conversation` (browse Telegram conversations per user)
 
 ### Environment / Config
 
-Dev credentials go in `.env.dev`. Required variables for Telegram: `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_SESSION_STRING`, `TELEGRAM_SESSION_NAME`, `TELEGRAM_DATABASE_URL`. See README for Telegram first-run auth flow.
+Env files live at the workspace root: shared/default values in `.env`, dev overrides in `.env.dev` (both gitignored). Key variables:
+- Auth: `SECRET_KEY`, `LOGIN_USERNAME`, `LOGIN_PASSWORD`
+- Ollama: `OLLAMA_BASE_URL`, `OLLAMA_DEFAULT_MODEL`
+- Telegram: `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_SESSION_STRING`, `TELEGRAM_SESSION_NAME`, `TELEGRAM_DATABASE_URL`. See README for Telegram first-run auth flow.
 
-The backend serves the frontend at `/app` (static) and `/` (SPA index.html). In dev, the Vite dev server at `:5173` (or `:3000`) proxies to the backend at `:8000`.
+The backend serves the frontend at `/app` (static; `/` redirects there). In dev, the Vite dev server proxies `/api` to the backend at `127.0.0.1:8000`.
 
 ### CI
 

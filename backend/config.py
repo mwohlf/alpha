@@ -3,9 +3,18 @@ Configuration management for the FastAPI backend.
 Loads settings from environment variables with .env file support.
 """
 
+import os
+from pathlib import Path
 from typing import List, Optional
 
 from pydantic_settings import BaseSettings
+
+# Env files are resolved relative to the workspace root so they load regardless of cwd.
+# ENV_FILE (e.g. ".env.dev") overrides values from .env; real env vars override both.
+_ROOT_DIR = Path(__file__).resolve().parent.parent
+_ENV_FILES = tuple(
+    _ROOT_DIR / name for name in (".env", os.environ.get("ENV_FILE")) if name
+)
 
 
 class Settings(BaseSettings):
@@ -62,7 +71,7 @@ class Settings(BaseSettings):
     TELEGRAM_MEDIA_DIR: str = "media"
 
     class Config:
-        env_file = ".env"
+        env_file = _ENV_FILES
         env_file_encoding = "utf-8"
         case_sensitive = True
 
